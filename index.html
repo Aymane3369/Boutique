@@ -1,5 +1,3 @@
-
-```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -169,7 +167,7 @@
         .modal-content {
             background: white;
             border-radius: 28px;
-            max-width: 600px;
+            max-width: 700px;
             width: 90%;
             padding: 1.8rem;
             max-height: 85vh;
@@ -205,6 +203,17 @@
             display: flex;
             gap: 0.5rem;
             margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .variant-row input {
+            flex: 1;
+            min-width: 100px;
+        }
+        .image-preview {
+            max-width: 100px;
+            max-height: 100px;
+            margin-top: 8px;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -273,7 +282,7 @@
     function getProductById(id) { return products.find(p => p.id === id); }
     function getProductImage(product) { return product.image ? `<img class="product-img-list" src="${product.image}">` : "🖼️"; }
 
-    // Dashboard avec 6 cartes (Stock total, Stock bas, Ruptures)
+    // Dashboard 6 cartes
     function getStockStats() {
         let totalStock = 0;
         let ruptures = 0;
@@ -294,8 +303,16 @@
         return { totalStock, ruptures, lowStockItems };
     }
 
+    function getStats() {
+        let totalProducts = products.length;
+        let activeProducts = products.filter(p => p.active !== false).length;
+        let paidOrders = orders.filter(o => o.status === "Payée");
+        let revenue = paidOrders.reduce((sum, o) => sum + o.total, 0);
+        return { totalProducts, activeProducts, revenue, ordersCount: orders.length };
+    }
+
     function renderDashboard() {
-        const stats = getStats();  // produits, commandes, CA
+        const stats = getStats();
         const stockStats = getStockStats();
         const paidOrdersCount = orders.filter(o => o.status === "Payée").length;
         return `
@@ -313,7 +330,9 @@
                     <thead><tr><th>N° commande</th><th>Client</th><th>Total</th><th>Code promo</th><th>Statut</th><th>Suivi admin</th></tr></thead>
                     <tbody>
                         ${orders.slice(0,5).map(o => `<tr>
-                            <td>${o.id}</td><td>${o.client}</td><td>${o.total} €</td>
+                            <td>${o.id}</td>
+                            <td>${o.client}</td>
+                            <td>${o.total} €</td>
                             <td>${o.promoCode ? `${o.promoCode} (‑${o.discount}€)` : "—"}</td>
                             <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
                             <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
@@ -324,16 +343,7 @@
         `;
     }
 
-    // getStats pour les cartes produits/commandes/CA
-    function getStats() {
-        let totalProducts = products.length;
-        let activeProducts = products.filter(p => p.active !== false).length;
-        let paidOrders = orders.filter(o => o.status === "Payée");
-        let revenue = paidOrders.reduce((sum, o) => sum + o.total, 0);
-        return { totalProducts, activeProducts, revenue, ordersCount: orders.length };
-    }
-
-    // Produits
+    // Produits (liste)
     function renderProducts() {
         return `
             <div class="page-header"><h1>Produits</h1><button class="btn" id="addProductBtn">+ Ajouter produit</button></div>
@@ -346,7 +356,8 @@
                             let stockDisplay = p.type === "simple" ? p.stock : (p.variants?.reduce((s,v)=>s+v.stock,0) || 0);
                             let imgHtml = getProductImage(p);
                             return `<tr>
-                                <td>${imgHtml}</td><td>${p.name}</td>
+                                <td>${imgHtml}</td>
+                                <td>${p.name}</td>
                                 <td>${p.type === "simple" ? "Simple" : "Variantes"}</td>
                                 <td>${priceDisplay}</td>
                                 <td>${stockDisplay}</td>
@@ -406,7 +417,7 @@
         renderCurrentPage();
     }
 
-    // Modale détail commande
+    // Détail commande
     function showOrderDetail(order) {
         const productNames = order.items.map(item => {
             const prod = getProductById(item.productId);
@@ -442,7 +453,6 @@
         modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
     }
 
-    // Modale d'application de code promo
     function showApplyPromoToOrder(orderId) {
         const order = orders.find(o => o.id === orderId);
         if(!order) return;
@@ -520,7 +530,7 @@
         modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
     }
 
-    // Commandes avec bouton Promo
+    // Commandes
     function renderOrders() {
         return `
             <div class="page-header"><h1>Commandes (${orders.length})</h1><button class="btn" id="simulateOrderBtn">+ Simuler commande</button></div>
@@ -544,7 +554,7 @@
         `;
     }
 
-    // Gestion des promos
+    // Promos
     function renderPromos() {
         return `
             <div class="page-header"><h1>Codes promo</h1><button class="btn" id="addPromoBtn">+ Créer un code</button></div>
@@ -622,7 +632,249 @@
         renderCurrentPage();
     }
 
-    // Gestion des événements
+    // ---------- MODAL PRODUIT CORRIGÉE ----------
+    function showProductModal(product = null) {
+        const isEdit = !!product;
+        // Préparer les variantes existantes
+        let variantsArray = product?.variants ? [...product.variants] : [];
+        
+        const modalHtml = `
+            <div class="modal" id="productModal">
+                <div class="modal-content">
+                    <h2>${isEdit ? "Modifier" : "Ajouter"} un produit</h2>
+                    <div class="form-group"><label>Nom</label><input id="prodName" value="${product?.name || ''}"></div>
+                    <div class="form-group"><label>Description</label><textarea id="prodDesc">${product?.description || ''}</textarea></div>
+                    <div class="form-group"><label>Type</label><select id="prodType">
+                        <option value="simple" ${product?.type === 'simple' ? 'selected' : ''}>Produit simple</option>
+                        <option value="variants" ${product?.type === 'variants' ? 'selected' : ''}>Avec variantes</option>
+                    </select></div>
+                    
+                    <div id="simpleFields" style="${product?.type === 'variants' ? 'display:none' : 'display:block'}">
+                        <div class="form-group"><label>Prix (€)</label><input id="simplePrice" type="number" step="0.01" value="${product?.price || ''}"></div>
+                        <div class="form-group"><label>Stock</label><input id="simpleStock" type="number" value="${product?.stock || 0}"></div>
+                    </div>
+                    
+                    <div id="variantsFields" style="${product?.type === 'variants' ? 'display:block' : 'display:none'}">
+                        <div class="form-group"><label>Prix de base (€)</label><input id="basePrice" type="number" step="0.01" value="${product?.basePrice || ''}"></div>
+                        <div class="form-group"><label>Variantes</label>
+                            <div id="variantsContainer"></div>
+                            <button type="button" class="btn-small" id="addVariantBtn" style="margin-top:0.5rem;">+ Ajouter une variante</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Image / Icône</label>
+                        <div>
+                            <label><input type="radio" name="imgType" value="none" ${!product?.image ? 'checked' : ''}> Pas d'icône</label>
+                            <label><input type="radio" name="imgType" value="upload" ${product?.image ? 'checked' : ''}> Télécharger une image (PNG/JPG)</label>
+                        </div>
+                        <div id="uploadArea" style="display:${product?.image ? 'block' : 'none'}; margin-top:0.5rem;">
+                            <input type="file" id="imageUpload" accept="image/png,image/jpeg">
+                            <br>
+                            <img id="previewImg" src="${product?.image || ''}" class="image-preview" style="display:${product?.image ? 'block' : 'none'}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group"><label><input type="checkbox" id="activeCheck" ${product?.active !== false ? 'checked' : ''}> Produit actif</label></div>
+                    
+                    <div class="flex-between">
+                        <button class="btn-outline" id="closeModalBtn">Annuler</button>
+                        <button class="btn" id="saveProductBtn">Enregistrer</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('productModal');
+        
+        // Éléments du DOM
+        const typeSelect = document.getElementById('prodType');
+        const simpleDiv = document.getElementById('simpleFields');
+        const variantsDiv = document.getElementById('variantsFields');
+        const uploadArea = document.getElementById('uploadArea');
+        const radioNone = document.querySelector('input[name="imgType"][value="none"]');
+        const radioUpload = document.querySelector('input[name="imgType"][value="upload"]');
+        const fileInput = document.getElementById('imageUpload');
+        const preview = document.getElementById('previewImg');
+        
+        // Toggle simple/variantes
+        function toggleFields() {
+            const isVariants = typeSelect.value === 'variants';
+            simpleDiv.style.display = isVariants ? 'none' : 'block';
+            variantsDiv.style.display = isVariants ? 'block' : 'none';
+        }
+        typeSelect.addEventListener('change', toggleFields);
+        
+        // Gestion affichage upload
+        radioNone.addEventListener('change', () => {
+            uploadArea.style.display = 'none';
+            preview.style.display = 'none';
+        });
+        radioUpload.addEventListener('change', () => {
+            uploadArea.style.display = 'block';
+        });
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    preview.src = ev.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert("Seulement les fichiers PNG ou JPG sont acceptés.");
+                fileInput.value = '';
+            }
+        });
+        
+        // Gestion des variantes (dynamique)
+        function renderVariants() {
+            const container = document.getElementById('variantsContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            variantsArray.forEach((v, idx) => {
+                const div = document.createElement('div');
+                div.className = 'variant-row';
+                div.innerHTML = `
+                    <input type="text" placeholder="Taille / Couleur" value="${escapeHtml(v.attributes || '')}" data-field="attrs${idx}">
+                    <input type="number" placeholder="Stock" value="${v.stock || 0}" style="width:90px" data-field="stock${idx}">
+                    <input type="number" placeholder="Prix €" step="0.01" value="${v.price || ''}" style="width:100px" data-field="price${idx}">
+                    <button type="button" class="btn-small btn-danger" data-idx="${idx}">✖</button>
+                `;
+                container.appendChild(div);
+            });
+            // Ajout des événements de suppression
+            document.querySelectorAll('#variantsContainer .btn-danger').forEach(btn => {
+                btn.removeEventListener('click', handleVariantDelete);
+                btn.addEventListener('click', handleVariantDelete);
+            });
+        }
+        
+        function handleVariantDelete(e) {
+            const idx = parseInt(e.currentTarget.dataset.idx);
+            variantsArray.splice(idx, 1);
+            renderVariants();
+        }
+        
+        // Fonction utilitaire pour échapper le HTML (éviter les injections)
+        function escapeHtml(str) {
+            if(!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if(m === '&') return '&amp;';
+                if(m === '<') return '&lt;';
+                if(m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+        
+        // Initialiser l'affichage des variantes si nécessaire
+        const addVariantBtn = document.getElementById('addVariantBtn');
+        if(addVariantBtn) {
+            addVariantBtn.addEventListener('click', () => {
+                variantsArray.push({ attributes: "", stock: 0, price: 0 });
+                renderVariants();
+            });
+        }
+        if(product?.type === 'variants') {
+            renderVariants();
+        }
+        
+        // Sauvegarde
+        document.getElementById('saveProductBtn').addEventListener('click', () => {
+            const name = document.getElementById('prodName').value.trim();
+            if(!name) {
+                alert("Le nom du produit est requis.");
+                return;
+            }
+            const description = document.getElementById('prodDesc').value;
+            const active = document.getElementById('activeCheck').checked;
+            
+            // Récupération de l'image (si upload)
+            let image = null;
+            if(radioUpload.checked && fileInput.files.length > 0 && preview.src && preview.src.startsWith('data:')) {
+                image = preview.src; // base64
+            } else if(radioUpload.checked && product?.image && !fileInput.files.length) {
+                // on garde l'ancienne image
+                image = product.image;
+            } else {
+                image = null; // pas d'icône
+            }
+            
+            const type = typeSelect.value;
+            if(type === 'simple') {
+                const price = parseFloat(document.getElementById('simplePrice').value);
+                const stock = parseInt(document.getElementById('simpleStock').value);
+                if(isNaN(price)) {
+                    alert("Prix invalide");
+                    return;
+                }
+                const newProduct = {
+                    id: isEdit ? product.id : Date.now().toString(),
+                    name, description, type: "simple",
+                    price, stock, image, active
+                };
+                if(isEdit) {
+                    const idx = products.findIndex(p => p.id === product.id);
+                    if(idx !== -1) products[idx] = newProduct;
+                } else {
+                    products.push(newProduct);
+                }
+            } else { // variantes
+                const basePrice = parseFloat(document.getElementById('basePrice').value);
+                if(isNaN(basePrice)) {
+                    alert("Prix de base requis");
+                    return;
+                }
+                // Récupérer les variantes depuis le DOM
+                const finalVariants = [];
+                const rows = document.querySelectorAll('#variantsContainer .variant-row');
+                for(let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const attrsInput = row.querySelector(`input[data-field="attrs${i}"]`);
+                    const stockInput = row.querySelector(`input[data-field="stock${i}"]`);
+                    const priceInput = row.querySelector(`input[data-field="price${i}"]`);
+                    const attributes = attrsInput ? attrsInput.value.trim() : '';
+                    if(attributes === "") continue; // ignorer les lignes vides
+                    const stock = parseInt(stockInput ? stockInput.value : 0) || 0;
+                    const priceVar = parseFloat(priceInput ? priceInput.value : 0) || basePrice;
+                    finalVariants.push({
+                        id: Date.now() + i + Math.random(),
+                        attributes: attributes,
+                        stock: stock,
+                        price: priceVar
+                    });
+                }
+                if(finalVariants.length === 0) {
+                    alert("Ajoutez au moins une variante (ex: S / Rouge)");
+                    return;
+                }
+                const newProduct = {
+                    id: isEdit ? product.id : Date.now().toString(),
+                    name, description, type: "variants",
+                    basePrice: basePrice,
+                    variants: finalVariants,
+                    image, active
+                };
+                if(isEdit) {
+                    const idx = products.findIndex(p => p.id === product.id);
+                    if(idx !== -1) products[idx] = newProduct;
+                } else {
+                    products.push(newProduct);
+                }
+            }
+            saveProducts();
+            modal.remove();
+            renderCurrentPage();
+        });
+        
+        document.getElementById('closeModalBtn').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
+    }
+    
+    // Gestion des événements globaux
     function attachGlobalEvents() {
         document.querySelectorAll('.status-admin').forEach(sel => {
             sel.removeEventListener('change', handleAdminChange);
@@ -661,7 +913,7 @@
             btn.addEventListener('click', handleDeletePromo);
         });
     }
-
+    
     function handleAdminChange(e) {
         const order = orders.find(o => o.id === e.target.dataset.orderId);
         if(order) { order.adminFollowup = e.target.value; saveOrders(); }
@@ -708,114 +960,7 @@
             renderCurrentPage();
         }
     }
-
-    // Modal produit simplifiée (reprise)
-    function showProductModal(product=null) {
-        const isEdit = !!product;
-        const modalHtml = `
-            <div class="modal" id="productModal">
-                <div class="modal-content">
-                    <h2>${isEdit ? "Modifier" : "Ajouter"} un produit</h2>
-                    <div class="form-group"><label>Nom</label><input id="prodName" value="${product?.name || ''}"></div>
-                    <div class="form-group"><label>Description</label><textarea id="prodDesc">${product?.description || ''}</textarea></div>
-                    <div class="form-group"><label>Type</label><select id="prodType"><option value="simple" ${product?.type === 'simple' ? 'selected' : ''}>Simple</option><option value="variants" ${product?.type === 'variants' ? 'selected' : ''}>Variantes</option></select></div>
-                    <div id="simpleFields" style="${product?.type === 'variants' ? 'display:none' : ''}">
-                        <div class="form-group"><label>Prix (€)</label><input id="simplePrice" type="number" step="0.01" value="${product?.price || ''}"></div>
-                        <div class="form-group"><label>Stock</label><input id="simpleStock" type="number" value="${product?.stock || 0}"></div>
-                    </div>
-                    <div id="variantsFields" style="${product?.type === 'variants' ? '' : 'display:none'}">
-                        <div class="form-group"><label>Prix de base (€)</label><input id="basePrice" type="number" step="0.01" value="${product?.basePrice || ''}"></div>
-                        <div class="form-group"><label>Variantes</label><div id="variantsContainer"></div><button type="button" class="btn-small" id="addVariantBtn">+ Ajouter variante</button></div>
-                    </div>
-                    <div class="form-group"><label>Image / Icône</label>
-                        <div><label><input type="radio" name="imgType" value="none" ${!product?.image ? 'checked' : ''}> Pas d'icône</label> <label><input type="radio" name="imgType" value="upload" ${product?.image ? 'checked' : ''}> PNG/JPG</label></div>
-                        <div id="uploadArea" style="display:${product?.image ? 'block' : 'none'}"><input type="file" id="imageUpload" accept="image/png,image/jpeg"><br><img id="previewImg" src="${product?.image || ''}" style="max-width:100px;display:${product?.image ? 'block' : 'none'}"></div>
-                    </div>
-                    <div class="form-group"><label><input type="checkbox" id="activeCheck" ${product?.active !== false ? 'checked' : ''}> Actif</label></div>
-                    <div class="flex-between"><button class="btn-outline" id="closeModalBtn">Annuler</button><button class="btn" id="saveProductBtn">Enregistrer</button></div>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        const modal = document.getElementById('productModal');
-        // Gestion variantes (simplifiée)
-        let variantsArray = product?.variants ? [...product.variants] : [];
-        function renderVariants() {
-            const container = document.getElementById('variantsContainer');
-            if(!container) return;
-            container.innerHTML = '';
-            variantsArray.forEach((v, idx) => {
-                const div = document.createElement('div');
-                div.className = 'variant-row';
-                div.innerHTML = `
-                    <input type="text" placeholder="Taille/Couleur" value="${v.attributes || ''}" data-field="attrs${idx}">
-                    <input type="number" placeholder="Stock" value="${v.stock || 0}" style="width:80px" data-field="stock${idx}">
-                    <input type="number" placeholder="Prix €" step="0.01" value="${v.price || ''}" style="width:100px" data-field="price${idx}">
-                    <button class="btn-small btn-danger" data-idx="${idx}">✖</button>
-                `;
-                container.appendChild(div);
-            });
-            document.querySelectorAll('[data-idx]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const idx = parseInt(btn.dataset.idx);
-                    variantsArray.splice(idx,1);
-                    renderVariants();
-                });
-            });
-        }
-        if(document.getElementById('addVariantBtn')) {
-            document.getElementById('addVariantBtn').addEventListener('click', () => {
-                variantsArray.push({ attributes: "", stock: 0, price: 0 });
-                renderVariants();
-            });
-        }
-        if(product?.type === 'variants') renderVariants();
-        document.getElementById('saveProductBtn').addEventListener('click', () => {
-            const name = document.getElementById('prodName').value.trim();
-            if(!name) return;
-            const description = document.getElementById('prodDesc').value;
-            const active = document.getElementById('activeCheck').checked;
-            let image = null;
-            const radioUpload = document.querySelector('input[name="imgType"]:checked')?.value === 'upload';
-            const fileInput = document.getElementById('imageUpload');
-            if(radioUpload && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => { image = e.target.result; save(); };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else { save(); }
-            function save() {
-                if(document.getElementById('prodType').value === 'simple') {
-                    const price = parseFloat(document.getElementById('simplePrice').value);
-                    const stock = parseInt(document.getElementById('simpleStock').value);
-                    const newProduct = { id: isEdit ? product.id : Date.now().toString(), name, description, type: "simple", price, stock, image, active };
-                    if(isEdit) {
-                        const idx = products.findIndex(p => p.id === product.id);
-                        if(idx !== -1) products[idx] = newProduct;
-                    } else products.push(newProduct);
-                } else {
-                    const basePrice = parseFloat(document.getElementById('basePrice').value);
-                    const finalVariants = [];
-                    document.querySelectorAll('#variantsContainer .variant-row').forEach((row, idx) => {
-                        const attrs = row.querySelector(`[data-field="attrs${idx}"]`)?.value || '';
-                        const stock = parseInt(row.querySelector(`[data-field="stock${idx}"]`)?.value) || 0;
-                        const priceVar = parseFloat(row.querySelector(`[data-field="price${idx}"]`)?.value) || 0;
-                        if(attrs) finalVariants.push({ id: Date.now()+idx+Math.random(), attributes: attrs, stock: stock, price: priceVar || basePrice });
-                    });
-                    const newProduct = { id: isEdit ? product.id : Date.now().toString(), name, description, type: "variants", basePrice, variants: finalVariants, image, active };
-                    if(isEdit) {
-                        const idx = products.findIndex(p => p.id === product.id);
-                        if(idx !== -1) products[idx] = newProduct;
-                    } else products.push(newProduct);
-                }
-                saveProducts();
-                modal.remove();
-                renderCurrentPage();
-            }
-        });
-        document.getElementById('closeModalBtn').addEventListener('click', () => modal.remove());
-        modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
-    }
-
+    
     let currentPage = 'dashboard';
     function renderCurrentPage() {
         let html = '';
@@ -825,12 +970,21 @@
         else if(currentPage === 'orders') html = renderOrders();
         else if(currentPage === 'promos') html = renderPromos();
         document.getElementById('mainContent').innerHTML = html;
-        if(currentPage === 'products') document.getElementById('addProductBtn')?.addEventListener('click', () => showProductModal(null));
-        if(currentPage === 'orders') document.getElementById('simulateOrderBtn')?.addEventListener('click', simulateOrder);
-        if(currentPage === 'promos') document.getElementById('addPromoBtn')?.addEventListener('click', showAddPromoModal);
+        if(currentPage === 'products') {
+            const addBtn = document.getElementById('addProductBtn');
+            if(addBtn) addBtn.addEventListener('click', () => showProductModal(null));
+        }
+        if(currentPage === 'orders') {
+            const simBtn = document.getElementById('simulateOrderBtn');
+            if(simBtn) simBtn.addEventListener('click', simulateOrder);
+        }
+        if(currentPage === 'promos') {
+            const addPromoBtn = document.getElementById('addPromoBtn');
+            if(addPromoBtn) addPromoBtn.addEventListener('click', showAddPromoModal);
+        }
         attachGlobalEvents();
     }
-
+    
     function initNavigation() {
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -846,4 +1000,3 @@
 </script>
 </body>
 </html>
-```
