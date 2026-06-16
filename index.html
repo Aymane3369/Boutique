@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StyleShop - Administration</title>
+    <title>StyleShop - Administration complète</title>
     <style>
         * {
             margin: 0;
@@ -11,13 +11,11 @@
             box-sizing: border-box;
             font-family: system-ui, 'Segoe UI', 'Inter', sans-serif;
         }
-
         body {
             background: #f1f5f9;
             display: flex;
             min-height: 100vh;
         }
-
         .sidebar {
             width: 260px;
             background: #0f172a;
@@ -27,19 +25,15 @@
             flex-direction: column;
             gap: 2rem;
         }
-
         .logo h2 {
             font-size: 1.6rem;
             font-weight: 700;
             color: white;
-            letter-spacing: -0.5px;
         }
         .logo span {
-            font-weight: 400;
             font-size: 0.8rem;
             color: #94a3b8;
         }
-
         .nav {
             display: flex;
             flex-direction: column;
@@ -59,13 +53,11 @@
             background: #3b82f6;
             color: white;
         }
-
         .main {
             flex: 1;
             padding: 2rem;
             overflow-y: auto;
         }
-
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -86,7 +78,6 @@
             border-radius: 30px;
             font-weight: 500;
             cursor: pointer;
-            transition: 0.2s;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
@@ -96,9 +87,6 @@
             border: 1px solid #cbd5e1;
             color: #1e293b;
         }
-        .btn-outline:hover {
-            background: #f8fafc;
-        }
         .btn-danger {
             background: #ef4444;
         }
@@ -106,7 +94,6 @@
             padding: 0.3rem 0.8rem;
             font-size: 0.8rem;
         }
-
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -117,7 +104,6 @@
             background: white;
             padding: 1.2rem;
             border-radius: 20px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             border: 1px solid #e2e8f0;
         }
         .stat-title {
@@ -131,7 +117,6 @@
             font-weight: 700;
             margin-top: 0.5rem;
         }
-
         .table-container {
             background: white;
             border-radius: 20px;
@@ -151,7 +136,6 @@
         th {
             background: #f8fafc;
             font-weight: 600;
-            color: #1e293b;
         }
         .badge {
             background: #e2e8f0;
@@ -159,7 +143,6 @@
             border-radius: 30px;
             font-size: 0.75rem;
             font-weight: 500;
-            display: inline-block;
         }
         .badge-success {
             background: #dcfce7;
@@ -169,15 +152,6 @@
             background: #fef9c3;
             color: #854d0e;
         }
-
-        select.status-admin {
-            padding: 0.3rem 0.5rem;
-            border-radius: 20px;
-            border: 1px solid #cbd5e1;
-            background: white;
-            font-size: 0.8rem;
-        }
-
         .modal {
             position: fixed;
             top: 0;
@@ -213,17 +187,6 @@
             border: 1px solid #cbd5e1;
             border-radius: 12px;
         }
-        .variant-row {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            align-items: center;
-        }
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
         .product-img-list {
             width: 40px;
             height: 40px;
@@ -231,28 +194,34 @@
             border-radius: 8px;
             background: #f1f5f9;
         }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .variant-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
-
 <div class="sidebar">
-    <div class="logo">
-        <h2>StyleShop</h2>
-        <span>Admin panel</span>
-    </div>
+    <div class="logo"><h2>StyleShop</h2><span>Admin panel</span></div>
     <div class="nav">
         <div class="nav-item active" data-page="dashboard">📊 Dashboard</div>
         <div class="nav-item" data-page="products">👕 Produits</div>
         <div class="nav-item" data-page="stock">📦 Stock</div>
         <div class="nav-item" data-page="orders">📋 Commandes</div>
+        <div class="nav-item" data-page="promos">🏷️ Promos</div>
     </div>
-    <div style="margin-top: auto; font-size: 0.7rem; color:#94a3b8;">Accès admin via Supabase Auth (demo)</div>
+    <div style="margin-top: auto; font-size: 0.7rem;">Accès admin via Supabase Auth (demo)</div>
 </div>
-
 <div class="main" id="mainContent"></div>
 
 <script>
-    // ---------- Données initiales avec codes promo ----------
+    // ---------- Données initiales ----------
     let products = [
         { id: "p1", name: "T-shirt Classic", description: "Coupe confortable", type: "simple", price: 19.9, stock: 12, image: null, active: true },
         { id: "p2", name: "Sneakers Urban", description: "Tige basse", type: "variants", basePrice: 59.9, variants: [
@@ -273,11 +242,17 @@
     ];
 
     let orders = [
-        { id: "ORD-RYCTHN", client: "marc@mail.com", items: [{ productId: "p1", qty: 1, price: 19.9 }], total: 19.9, status: "Payée", adminFollowup: "À traiter", promoCode: null, discount: 0 },
-        { id: "ORD-WCP62J", client: "leo@mail.com", items: [{ productId: "p2", variantId: "v1", qty: 1, price: 59.9 }], total: 39.8, status: "Payée", adminFollowup: "En cours", promoCode: "PROMO10", discount: 5 },
-        { id: "ORD-G7H81J", client: "claire@mail.com", items: [{ productId: "p3", variantId: "v7", qty: 1, price: 59.9 }], total: 59.9, status: "En attente", adminFollowup: "À traiter", promoCode: "BIENVENUE", discount: 10 },
-        { id: "ORD-D4E5F6", client: "bob@mail.com", items: [{ productId: "p4", qty: 1, price: 24.9 }], total: 89.9, status: "Payée", adminFollowup: "Expédié", promoCode: null, discount: 0 },
-        { id: "ORD-A1B2C3", client: "alice@mail.com", items: [{ productId: "p1", qty: 2, price: 19.9 }, { productId: "p4", qty: 1, price: 24.9 }], total: 69.7, status: "Payée", adminFollowup: "Terminé", promoCode: "BLACKFRIDAY", discount: 15 }
+        { id: "ORD-RYCTHN", client: "marc@mail.com", date: "2026-06-10", time: "14:23", items: [{ productId: "p1", qty: 1, price: 19.9 }], total: 19.9, status: "Payée", adminFollowup: "À traiter", promoCode: null, discount: 0 },
+        { id: "ORD-WCP62J", client: "leo@mail.com", date: "2026-06-11", time: "09:15", items: [{ productId: "p2", variantId: "v1", qty: 1, price: 59.9 }], total: 39.8, status: "Payée", adminFollowup: "En cours", promoCode: "PROMO10", discount: 5 },
+        { id: "ORD-G7H81J", client: "claire@mail.com", date: "2026-06-12", time: "18:42", items: [{ productId: "p3", variantId: "v7", qty: 1, price: 59.9 }], total: 59.9, status: "En attente", adminFollowup: "À traiter", promoCode: "BIENVENUE", discount: 10 },
+        { id: "ORD-D4E5F6", client: "bob@mail.com", date: "2026-06-13", time: "11:05", items: [{ productId: "p4", qty: 1, price: 24.9 }], total: 89.9, status: "Payée", adminFollowup: "Expédié", promoCode: null, discount: 0 },
+        { id: "ORD-A1B2C3", client: "alice@mail.com", date: "2026-06-14", time: "20:30", items: [{ productId: "p1", qty: 2, price: 19.9 }, { productId: "p4", qty: 1, price: 24.9 }], total: 69.7, status: "Payée", adminFollowup: "Terminé", promoCode: "BLACKFRIDAY", discount: 15 }
+    ];
+
+    let promos = [
+        { code: "PROMO10", type: "fixed", value: 5, active: true },
+        { code: "BIENVENUE", type: "percent", value: 15, active: true },
+        { code: "BLACKFRIDAY", type: "fixed", value: 15, active: true }
     ];
 
     function loadData() {
@@ -285,60 +260,71 @@
         if(storedProducts) products = JSON.parse(storedProducts);
         const storedOrders = localStorage.getItem("styleshop_orders");
         if(storedOrders) orders = JSON.parse(storedOrders);
+        const storedPromos = localStorage.getItem("styleshop_promos");
+        if(storedPromos) promos = JSON.parse(storedPromos);
     }
     function saveProducts() { localStorage.setItem("styleshop_products", JSON.stringify(products)); }
     function saveOrders() { localStorage.setItem("styleshop_orders", JSON.stringify(orders)); }
+    function savePromos() { localStorage.setItem("styleshop_promos", JSON.stringify(promos)); }
     loadData();
 
-    function getStats() {
-        let totalProducts = products.length;
-        let activeProducts = products.filter(p => p.active !== false).length;
+    // Utilitaires
+    function getProductById(id) { return products.find(p => p.id === id); }
+    function getProductImage(product) { return product.image ? `<img class="product-img-list" src="${product.image}">` : "🖼️"; }
+
+    // Calculs stock total + ruptures
+    function getStockStats() {
         let totalStock = 0;
-        products.forEach(p => {
-            if(p.type === "simple") totalStock += (p.stock || 0);
-            else if(p.variants) totalStock += p.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
-        });
-        let paidOrders = orders.filter(o => o.status === "Payée");
-        let revenue = paidOrders.reduce((sum, o) => sum + o.total, 0);
+        let ruptures = 0;
         let lowStockItems = 0;
         products.forEach(p => {
-            if(p.type === "simple" && p.stock <= 2 && p.stock > 0) lowStockItems++;
-            else if(p.variants) p.variants.forEach(v => { if(v.stock <= 2 && v.stock > 0) lowStockItems++; });
+            if(p.type === "simple") {
+                totalStock += p.stock;
+                if(p.stock === 0) ruptures++;
+                else if(p.stock <= 2) lowStockItems++;
+            } else if(p.variants) {
+                p.variants.forEach(v => {
+                    totalStock += v.stock;
+                    if(v.stock === 0) ruptures++;
+                    else if(v.stock <= 2) lowStockItems++;
+                });
+            }
         });
-        return { totalProducts, activeProducts, totalStock, revenue, ordersCount: orders.length, lowStockItems };
+        return { totalStock, ruptures, lowStockItems };
     }
 
-    // Rendu Dashboard avec colonne promo
+    // Dashboard amélioré
     function renderDashboard() {
         const stats = getStats();
+        const stockStats = getStockStats();
         const paidOrdersCount = orders.filter(o => o.status === "Payée").length;
         return `
             <div class="page-header"><h1>Dashboard</h1></div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="stat-title">📦 PRODUITS</div><div class="stat-value">${stats.totalProducts}</div><div style="font-size:0.9rem;">${stats.activeProducts} actifs</div></div>
-                <div class="stat-card"><div class="stat-title">🛒 COMMANDES</div><div class="stat-value">${stats.ordersCount}</div><div style="font-size:0.9rem;">${paidOrdersCount} payées</div></div>
-                <div class="stat-card"><div class="stat-title">💰 CHIFFRE D'AFFAIRES</div><div class="stat-value">${stats.revenue.toFixed(2)} €</div><div style="font-size:0.9rem;">commandes payées</div></div>
-                <div class="stat-card"><div class="stat-title">⚠️ STOCK BAS</div><div class="stat-value">${stats.lowStockItems}</div><div style="font-size:0.9rem;">article(s) sous seuil</div></div>
+                <div class="stat-card"><div class="stat-title">📦 PRODUITS</div><div class="stat-value">${stats.totalProducts}</div><div>${stats.activeProducts} actifs</div></div>
+                <div class="stat-card"><div class="stat-title">🛒 COMMANDES</div><div class="stat-value">${stats.ordersCount}</div><div>${paidOrdersCount} payées</div></div>
+                <div class="stat-card"><div class="stat-title">💰 CA (payées)</div><div class="stat-value">${stats.revenue.toFixed(2)} €</div></div>
+                <div class="stat-card"><div class="stat-title">📦 STOCK TOTAL</div><div class="stat-value">${stockStats.totalStock}</div><div>unités</div></div>
+                <div class="stat-card"><div class="stat-title">⚠️ STOCK BAS</div><div class="stat-value">${stockStats.lowStockItems}</div><div>articles sous seuil (≤2)</div></div>
+                <div class="stat-card"><div class="stat-title">❌ RUPTURES</div><div class="stat-value">${stockStats.ruptures}</div><div>produits/variantes à 0</div></div>
             </div>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>N° commande</th><th>Client</th><th>Total</th><th>Code promo / Réduction</th><th>Statut</th><th>Suivi admin</th></tr></thead>
+                    <thead><tr><th>N° commande</th><th>Client</th><th>Total</th><th>Code promo</th><th>Statut</th><th>Suivi admin</th></tr></thead>
                     <tbody>
-                        ${orders.slice(0,5).map(o => `
-                            <tr>
-                                <td>${o.id}</td><td>${o.client}</td><td>${o.total} €</td>
-                                <td>${o.promoCode ? `${o.promoCode} (‑${o.discount}€)` : "—"}</td>
-                                <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
-                                <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
-                            </tr>
-                        `).join('')}
+                        ${orders.slice(0,5).map(o => `<tr>
+                            <td>${o.id}</td><td>${o.client}</td><td>${o.total} €</td>
+                            <td>${o.promoCode ? `${o.promoCode} (‑${o.discount}€)` : "—"}</td>
+                            <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
+                            <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
+                        </tr>`).join('')}
                     </tbody>
                 </table>
             </div>
         `;
     }
 
-    // Produits : colonnes déjà correctes (Image, Nom, Type, Prix, Stock, Actif, Actions)
+    // Produits (identique)
     function renderProducts() {
         return `
             <div class="page-header"><h1>Produits</h1><button class="btn" id="addProductBtn">+ Ajouter produit</button></div>
@@ -349,7 +335,7 @@
                         ${products.map(p => {
                             let priceDisplay = p.type === "simple" ? `${p.price} €` : `à partir de ${p.basePrice} €`;
                             let stockDisplay = p.type === "simple" ? p.stock : (p.variants?.reduce((s,v)=>s+v.stock,0) || 0);
-                            let imgHtml = p.image ? `<img class="product-img-list" src="${p.image}" style="width:40px;height:40px;">` : (p.iconText || "🖼️");
+                            let imgHtml = getProductImage(p);
                             return `<tr>
                                 <td>${imgHtml}</td><td>${p.name}</td><td>${p.type === "simple" ? "Simple" : "Variantes"}</td>
                                 <td>${priceDisplay}</td><td>${stockDisplay}</td>
@@ -363,142 +349,15 @@
         `;
     }
 
-    // Modal produit (identique)
-    function showProductModal(product=null) {
-        const isEdit = !!product;
-        let formHtml = `
-            <div class="modal" id="productModal">
-                <div class="modal-content">
-                    <h2>${isEdit ? "Modifier" : "Ajouter"} un produit</h2>
-                    <div class="form-group"><label>Nom</label><input id="prodName" value="${product?.name || ''}"></div>
-                    <div class="form-group"><label>Description</label><textarea id="prodDesc">${product?.description || ''}</textarea></div>
-                    <div class="form-group"><label>Type</label><select id="prodType"><option value="simple" ${product?.type === 'simple' ? 'selected' : ''}>Simple</option><option value="variants" ${product?.type === 'variants' ? 'selected' : ''}>Avec variantes</option></select></div>
-                    <div id="simpleFields" style="${product?.type === 'variants' ? 'display:none' : ''}">
-                        <div class="form-group"><label>Prix (€)</label><input id="simplePrice" type="number" step="0.01" value="${product?.price || ''}"></div>
-                        <div class="form-group"><label>Stock</label><input id="simpleStock" type="number" value="${product?.stock || 0}"></div>
-                    </div>
-                    <div id="variantsFields" style="${product?.type === 'variants' ? '' : 'display:none'}">
-                        <div class="form-group"><label>Prix de base (€)</label><input id="basePrice" type="number" step="0.01" value="${product?.basePrice || ''}"></div>
-                        <div class="form-group"><label>Variantes</label><div id="variantsContainer"></div><button type="button" class="btn-small" id="addVariantBtn">+ Ajouter variante</button></div>
-                    </div>
-                    <div class="form-group"><label>Image / Icône</label>
-                        <div><label><input type="radio" name="imgType" value="none" ${!product?.image ? 'checked' : ''}> Pas d'icône</label> <label><input type="radio" name="imgType" value="upload" ${product?.image ? 'checked' : ''}> PNG/JPG</label></div>
-                        <div id="uploadArea" style="display:${product?.image ? 'block' : 'none'}"><input type="file" id="imageUpload" accept="image/png,image/jpeg"><br><img id="previewImg" src="${product?.image || ''}" style="max-width:100px;display:${product?.image ? 'block' : 'none'}"></div>
-                    </div>
-                    <div class="form-group"><label><input type="checkbox" id="activeCheck" ${product?.active !== false ? 'checked' : ''}> Actif</label></div>
-                    <div class="flex-between"><button class="btn-outline" id="closeModalBtn">Annuler</button><button class="btn" id="saveProductBtn">Enregistrer</button></div>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', formHtml);
-        const modal = document.getElementById('productModal');
-        const typeSelect = document.getElementById('prodType');
-        const simpleDiv = document.getElementById('simpleFields');
-        const variantsDiv = document.getElementById('variantsFields');
-        const uploadArea = document.getElementById('uploadArea');
-        const radioNone = document.querySelector('input[name="imgType"][value="none"]');
-        const radioUpload = document.querySelector('input[name="imgType"][value="upload"]');
-        const fileInput = document.getElementById('imageUpload');
-        const preview = document.getElementById('previewImg');
-
-        function toggleVariantSimple() {
-            const isVariants = typeSelect.value === 'variants';
-            simpleDiv.style.display = isVariants ? 'none' : 'block';
-            variantsDiv.style.display = isVariants ? 'block' : 'none';
-        }
-        typeSelect.addEventListener('change', toggleVariantSimple);
-        radioNone.addEventListener('change', () => { uploadArea.style.display = 'none'; preview.style.display='none'; });
-        radioUpload.addEventListener('change', () => { uploadArea.style.display = 'block'; });
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if(file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
-                const reader = new FileReader();
-                reader.onload = (ev) => { preview.src = ev.target.result; preview.style.display = 'block'; };
-                reader.readAsDataURL(file);
-            } else alert("Seulement PNG ou JPG");
-        });
-
-        let variantsArray = product?.variants ? [...product.variants] : [];
-        function renderVariants() {
-            const container = document.getElementById('variantsContainer');
-            if(!container) return;
-            container.innerHTML = '';
-            variantsArray.forEach((v, idx) => {
-                const div = document.createElement('div');
-                div.className = 'variant-row';
-                div.innerHTML = `
-                    <input type="text" placeholder="Taille/Couleur" value="${v.attributes || ''}" data-field="attrs${idx}">
-                    <input type="number" placeholder="Stock" value="${v.stock || 0}" style="width:80px" data-field="stock${idx}">
-                    <input type="number" placeholder="Prix €" step="0.01" value="${v.price || ''}" style="width:100px" data-field="price${idx}">
-                    <button class="btn-small btn-danger" data-idx="${idx}">✖</button>
-                `;
-                container.appendChild(div);
-            });
-            document.querySelectorAll('[data-idx]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const idx = parseInt(btn.dataset.idx);
-                    variantsArray.splice(idx,1);
-                    renderVariants();
-                });
-            });
-        }
-        if(document.getElementById('addVariantBtn')) {
-            document.getElementById('addVariantBtn').addEventListener('click', () => {
-                variantsArray.push({ attributes: "", stock: 0, price: 0 });
-                renderVariants();
-            });
-        }
-        if(product?.type === 'variants') renderVariants();
-
-        document.getElementById('saveProductBtn').addEventListener('click', () => {
-            const name = document.getElementById('prodName').value.trim();
-            if(!name) return alert("Nom requis");
-            const description = document.getElementById('prodDesc').value;
-            const active = document.getElementById('activeCheck').checked;
-            let image = null;
-            if(radioUpload.checked && fileInput.files[0]) image = preview.src;
-            if(typeSelect.value === 'simple') {
-                const price = parseFloat(document.getElementById('simplePrice').value);
-                const stock = parseInt(document.getElementById('simpleStock').value);
-                if(isNaN(price)) return alert("Prix invalide");
-                const newProduct = { id: isEdit ? product.id : Date.now().toString(), name, description, type: "simple", price, stock, image, active };
-                if(isEdit) {
-                    const idx = products.findIndex(p => p.id === product.id);
-                    if(idx !== -1) products[idx] = newProduct;
-                } else products.push(newProduct);
-            } else {
-                const basePrice = parseFloat(document.getElementById('basePrice').value);
-                if(isNaN(basePrice)) return alert("Prix de base requis");
-                const finalVariants = [];
-                document.querySelectorAll('#variantsContainer .variant-row').forEach((row, idx) => {
-                    const attrs = row.querySelector(`[data-field="attrs${idx}"]`)?.value || '';
-                    const stock = parseInt(row.querySelector(`[data-field="stock${idx}"]`)?.value) || 0;
-                    const priceVar = parseFloat(row.querySelector(`[data-field="price${idx}"]`)?.value) || 0;
-                    if(attrs) finalVariants.push({ id: Date.now()+idx+Math.random(), attributes: attrs, stock: stock, price: priceVar || basePrice });
-                });
-                const newProduct = { id: isEdit ? product.id : Date.now().toString(), name, description, type: "variants", basePrice, variants: finalVariants, image, active };
-                if(isEdit) {
-                    const idx = products.findIndex(p => p.id === product.id);
-                    if(idx !== -1) products[idx] = newProduct;
-                } else products.push(newProduct);
-            }
-            saveProducts();
-            modal.remove();
-            renderCurrentPage();
-        });
-        document.getElementById('closeModalBtn').addEventListener('click', () => modal.remove());
-        modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
-    }
-
-    // Stock (inchangé)
+    // Stock avec image
     function renderStock() {
         let rows = [];
         products.forEach(p => {
             if(p.type === "simple") {
-                rows.push({ name: p.name, variant: "Simple", stock: p.stock, productId: p.id, variantId: null, isVariant: false });
+                rows.push({ name: p.name, variant: "Simple", stock: p.stock, productId: p.id, variantId: null, isVariant: false, image: p.image });
             } else if(p.variants) {
                 p.variants.forEach(v => {
-                    rows.push({ name: p.name, variant: v.attributes, stock: v.stock, productId: p.id, variantId: v.id, isVariant: true });
+                    rows.push({ name: p.name, variant: v.attributes, stock: v.stock, productId: p.id, variantId: v.id, isVariant: true, image: p.image });
                 });
             }
         });
@@ -506,10 +365,11 @@
             <div class="page-header"><h1>Gestion du stock</h1></div>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Produit</th><th>Variante</th><th>Stock actuel</th><th>Ajuster</th></tr></thead>
+                    <thead><tr><th>Image</th><th>Produit</th><th>Variante</th><th>Stock actuel</th><th>Ajuster</th></tr></thead>
                     <tbody>
                         ${rows.map(r => `
                             <tr>
+                                <td>${r.image ? `<img class="product-img-list" src="${r.image}">` : "🖼️"}</td>
                                 <td>${r.name}</td><td>${r.variant}</td>
                                 <td>${r.stock === 0 ? "Rupture" : r.stock <= 2 ? `Bas (${r.stock})` : r.stock}</td>
                                 <td><button class="btn-small stock-down" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">-</button> <span style="margin:0 8px">${r.stock}</span> <button class="btn-small stock-up" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">+</button></td>
@@ -525,73 +385,232 @@
         const product = products.find(p => p.id === productId);
         if(!product) return;
         if(!isVariant && product.type === "simple") {
-            let newStock = (product.stock || 0) + delta;
-            if(newStock < 0) newStock = 0;
-            product.stock = newStock;
+            product.stock = Math.max(0, (product.stock || 0) + delta);
         } else if(isVariant && product.variants) {
             const variant = product.variants.find(v => v.id === variantId);
-            if(variant) {
-                let newStock = variant.stock + delta;
-                if(newStock < 0) newStock = 0;
-                variant.stock = newStock;
-            }
+            if(variant) variant.stock = Math.max(0, variant.stock + delta);
         }
         saveProducts();
         renderCurrentPage();
     }
 
-    // Commandes avec colonne promo
+    // Détail commande (modale)
+    function showOrderDetail(order) {
+        const productNames = order.items.map(item => {
+            const prod = getProductById(item.productId);
+            const name = prod ? prod.name : "Produit";
+            const variantInfo = item.variantId && prod?.variants ? prod.variants.find(v => v.id === item.variantId)?.attributes : "";
+            return `${name} ${variantInfo ? `(${variantInfo})` : ""} × ${item.qty} = ${(item.price * item.qty).toFixed(2)} €`;
+        }).join("<br>");
+        const modalHtml = `
+            <div class="modal" id="detailModal">
+                <div class="modal-content">
+                    <h2>Détail commande ${order.id}</h2>
+                    <p><strong>Client :</strong> ${order.client}</p>
+                    <p><strong>Date :</strong> ${order.date || "non renseignée"} ${order.time ? `à ${order.time}` : ""}</p>
+                    <p><strong>Statut :</strong> ${order.status}</p>
+                    <p><strong>Suivi admin :</strong> ${order.adminFollowup}</p>
+                    <p><strong>Articles :</strong><br>${productNames}</p>
+                    <p><strong>Total :</strong> ${order.total} €</p>
+                    <p><strong>Code promo :</strong> ${order.promoCode ? `${order.promoCode} (‑${order.discount}€)` : "Aucun"}</p>
+                    <div class="flex-between" style="margin-top:1rem;">
+                        <button class="btn-outline" id="closeDetailBtn">Fermer</button>
+                        <button class="btn" id="applyPromoBtn" data-order-id="${order.id}">Appliquer un code promo</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('detailModal');
+        document.getElementById('closeDetailBtn').addEventListener('click', () => modal.remove());
+        document.getElementById('applyPromoBtn')?.addEventListener('click', () => {
+            modal.remove();
+            showApplyPromoToOrder(order.id);
+        });
+        modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
+    }
+
+    function showApplyPromoToOrder(orderId) {
+        const order = orders.find(o => o.id === orderId);
+        if(!order) return;
+        const availablePromos = promos.filter(p => p.active);
+        const modalHtml = `
+            <div class="modal" id="promoModal">
+                <div class="modal-content">
+                    <h2>Appliquer un code promo à ${orderId}</h2>
+                    <div class="form-group">
+                        <label>Choisir un code existant</label>
+                        <select id="existingPromo">
+                            <option value="">-- Aucun --</option>
+                            ${availablePromos.map(p => `<option value="${p.code}">${p.code} (${p.type === 'fixed' ? p.value+'€' : p.value+'%'})</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ou saisir un nouveau code (montant en € ou %) :</label>
+                        <input type="text" id="newPromoCode" placeholder="Code">
+                        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                            <input type="number" id="promoValue" placeholder="Valeur" step="0.01">
+                            <select id="promoType"><option value="fixed">€</option><option value="percent">%</option></select>
+                        </div>
+                    </div>
+                    <div class="flex-between">
+                        <button class="btn-outline" id="cancelPromoBtn">Annuler</button>
+                        <button class="btn" id="confirmPromoBtn">Appliquer</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('promoModal');
+        document.getElementById('cancelPromoBtn').addEventListener('click', () => modal.remove());
+        document.getElementById('confirmPromoBtn').addEventListener('click', () => {
+            const existingCode = document.getElementById('existingPromo').value;
+            let promoCode = existingCode;
+            let discount = 0;
+            let type = null;
+            let value = 0;
+            if(existingCode) {
+                const promo = promos.find(p => p.code === existingCode);
+                if(promo) {
+                    type = promo.type;
+                    value = promo.value;
+                }
+            } else {
+                const newCode = document.getElementById('newPromoCode').value.trim();
+                const rawValue = parseFloat(document.getElementById('promoValue').value);
+                const typeSelect = document.getElementById('promoType').value;
+                if(newCode && !isNaN(rawValue) && rawValue > 0) {
+                    promoCode = newCode;
+                    type = typeSelect;
+                    value = rawValue;
+                    // optionnel : ajouter aux promos existantes
+                    if(!promos.find(p => p.code === newCode)) {
+                        promos.push({ code: newCode, type: type, value: value, active: true });
+                        savePromos();
+                    }
+                }
+            }
+            if(promoCode && type) {
+                // calcul remise
+                let originalTotal = order.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                let discountAmount = type === 'fixed' ? value : (originalTotal * value / 100);
+                discountAmount = Math.min(discountAmount, originalTotal);
+                order.discount = discountAmount;
+                order.promoCode = promoCode;
+                order.total = parseFloat((originalTotal - discountAmount).toFixed(2));
+                saveOrders();
+                alert(`Code ${promoCode} appliqué : remise de ${discountAmount.toFixed(2)}€`);
+                modal.remove();
+                renderCurrentPage();
+            } else {
+                alert("Veuillez sélectionner ou créer un code promo valide");
+            }
+        });
+        modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
+    }
+
+    // Commandes avec colonne détail
     function renderOrders() {
         return `
             <div class="page-header"><h1>Commandes (${orders.length})</h1><button class="btn" id="simulateOrderBtn">+ Simuler commande</button></div>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>N° commande</th><th>Client</th><th>Articles</th><th>Total</th><th>Code promo / Réduction</th><th>Statut</th><th>Suivi admin</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>N°</th><th>Client</th><th>Total</th><th>Code promo</th><th>Statut</th><th>Suivi admin</th><th>Détail</th><th>Actions</th></tr></thead>
                     <tbody>
-                        ${orders.map(o => `
-                            <tr>
-                                <td>${o.id}</td><td>${o.client}</td><td>${o.items?.length || 1} article(s)</td><td>${o.total} €</td>
-                                <td>${o.promoCode ? `${o.promoCode} (‑${o.discount}€)` : "—"}</td>
-                                <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
-                                <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
-                                <td><button class="btn-small btn-danger delete-order" data-id="${o.id}">Supprimer</button></td>
-                            </tr>
-                        `).join('')}
+                        ${orders.map(o => `<tr>
+                            <td>${o.id}</td><td>${o.client}</td><td>${o.total} €</td>
+                            <td>${o.promoCode ? `${o.promoCode} (‑${o.discount}€)` : "—"}</td>
+                            <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
+                            <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
+                            <td><button class="btn-small btn-outline view-detail" data-id="${o.id}">👁️ Voir</button></td>
+                            <td><button class="btn-small btn-danger delete-order" data-id="${o.id}">Supprimer</button></td>
+                        </tr>`).join('')}
                     </tbody>
                 </table>
             </div>
         `;
     }
 
+    // Gestion des promos
+    function renderPromos() {
+        return `
+            <div class="page-header"><h1>Codes promo</h1><button class="btn" id="addPromoBtn">+ Créer un code</button></div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Code</th><th>Type</th><th>Valeur</th><th>Actif</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        ${promos.map(p => `<tr>
+                            <td>${p.code}</td><td>${p.type === 'fixed' ? '€ fixe' : '%'}</td>
+                            <td>${p.type === 'fixed' ? p.value+'€' : p.value+'%'}</td>
+                            <td>${p.active ? "✅" : "❌"}</td>
+                            <td><button class="btn-small btn-outline toggle-promo" data-code="${p.code}">Toggle actif</button> <button class="btn-small btn-danger delete-promo" data-code="${p.code}">Supprimer</button></td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function showAddPromoModal() {
+        const modalHtml = `
+            <div class="modal" id="promoModal">
+                <div class="modal-content">
+                    <h2>Créer un code promo</h2>
+                    <div class="form-group"><label>Code</label><input id="promoCode" placeholder="ex: SOLDES20"></div>
+                    <div class="form-group"><label>Type</label><select id="promoType"><option value="fixed">Réduction fixe (€)</option><option value="percent">Pourcentage (%)</option></select></div>
+                    <div class="form-group"><label>Valeur</label><input id="promoValue" type="number" step="0.01" placeholder="5 ou 15"></div>
+                    <div class="flex-between"><button class="btn-outline" id="cancelPromoBtn">Annuler</button><button class="btn" id="savePromoBtn">Enregistrer</button></div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('promoModal');
+        document.getElementById('savePromoBtn').addEventListener('click', () => {
+            const code = document.getElementById('promoCode').value.trim().toUpperCase();
+            const type = document.getElementById('promoType').value;
+            const value = parseFloat(document.getElementById('promoValue').value);
+            if(!code || isNaN(value) || value <= 0) return alert("Code et valeur valides requis");
+            promos.push({ code, type, value, active: true });
+            savePromos();
+            modal.remove();
+            renderCurrentPage();
+        });
+        document.getElementById('cancelPromoBtn').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
+    }
+
+    // Simulation de commande avec possibilité d'appliquer un code promo
     function simulateOrder() {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let newId = 'ORD-' + Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
         const randClient = `client${Math.floor(Math.random()*100)}@demo.com`;
-        let baseTotal = parseFloat((Math.random() * 100 + 10).toFixed(2));
-        const hasPromo = Math.random() > 0.5;
+        const now = new Date();
+        const date = now.toISOString().slice(0,10);
+        const time = now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+        let items = [{ productId: "p1", qty: 1, price: 19.9 }];
+        let subtotal = 19.9;
         let promoCode = null, discount = 0;
-        if(hasPromo) {
-            const promos = [["PROMO10", 5], ["BIENVENUE", 10], ["SOLDES20", 8], ["BLACKFRIDAY", 15]];
-            const pick = promos[Math.floor(Math.random() * promos.length)];
-            promoCode = pick[0];
-            discount = pick[1];
-            baseTotal = Math.max(0, baseTotal - discount);
+        // Option : appliquer une promo aléatoire parmi les actives
+        const activePromos = promos.filter(p => p.active);
+        if(activePromos.length > 0 && Math.random() > 0.5) {
+            const promo = activePromos[Math.floor(Math.random() * activePromos.length)];
+            promoCode = promo.code;
+            if(promo.type === 'fixed') discount = Math.min(promo.value, subtotal);
+            else discount = subtotal * promo.value / 100;
+            discount = parseFloat(discount.toFixed(2));
         }
         const newOrder = {
-            id: newId,
-            client: randClient,
-            items: [{ productId: "p1", qty: 1, price: baseTotal + discount }],
-            total: parseFloat(baseTotal.toFixed(2)),
+            id: newId, client: randClient, date: date, time: time,
+            items: items, total: parseFloat((subtotal - discount).toFixed(2)),
             status: Math.random() > 0.6 ? "Payée" : "En attente",
-            adminFollowup: "À traiter",
-            promoCode: promoCode,
-            discount: discount
+            adminFollowup: "À traiter", promoCode: promoCode, discount: discount
         };
         orders.unshift(newOrder);
         saveOrders();
         renderCurrentPage();
     }
 
+    // Événements et navigation
     function attachGlobalEvents() {
         document.querySelectorAll('.status-admin').forEach(sel => {
             sel.removeEventListener('change', handleAdminChange);
@@ -613,12 +632,22 @@
             btn.removeEventListener('click', handleDeleteOrder);
             btn.addEventListener('click', handleDeleteOrder);
         });
+        document.querySelectorAll('.view-detail').forEach(btn => {
+            btn.removeEventListener('click', handleViewDetail);
+            btn.addEventListener('click', handleViewDetail);
+        });
+        document.querySelectorAll('.toggle-promo').forEach(btn => {
+            btn.removeEventListener('click', handleTogglePromo);
+            btn.addEventListener('click', handleTogglePromo);
+        });
+        document.querySelectorAll('.delete-promo').forEach(btn => {
+            btn.removeEventListener('click', handleDeletePromo);
+            btn.addEventListener('click', handleDeletePromo);
+        });
     }
     function handleAdminChange(e) {
-        const orderId = e.target.dataset.orderId;
-        const newValue = e.target.value;
-        const order = orders.find(o => o.id === orderId);
-        if(order) { order.adminFollowup = newValue; saveOrders(); }
+        const order = orders.find(o => o.id === e.target.dataset.orderId);
+        if(order) { order.adminFollowup = e.target.value; saveOrders(); }
     }
     function handleStockClick(e) {
         const btn = e.currentTarget;
@@ -626,25 +655,106 @@
         updateStock(btn.dataset.pid, btn.dataset.vid, delta, btn.dataset.isvar === 'true');
     }
     function handleDeleteProduct(e) {
-        const id = e.currentTarget.dataset.id;
         if(confirm("Supprimer ce produit ?")) {
-            products = products.filter(p => p.id !== id);
+            products = products.filter(p => p.id !== e.currentTarget.dataset.id);
             saveProducts();
             renderCurrentPage();
         }
     }
     function handleEditProduct(e) {
-        const id = e.currentTarget.dataset.id;
-        const product = products.find(p => p.id === id);
+        const product = products.find(p => p.id === e.currentTarget.dataset.id);
         if(product) showProductModal(product);
     }
     function handleDeleteOrder(e) {
-        const id = e.currentTarget.dataset.id;
         if(confirm("Supprimer cette commande ?")) {
-            orders = orders.filter(o => o.id !== id);
+            orders = orders.filter(o => o.id !== e.currentTarget.dataset.id);
             saveOrders();
             renderCurrentPage();
         }
+    }
+    function handleViewDetail(e) {
+        const order = orders.find(o => o.id === e.currentTarget.dataset.id);
+        if(order) showOrderDetail(order);
+    }
+    function handleTogglePromo(e) {
+        const promo = promos.find(p => p.code === e.currentTarget.dataset.code);
+        if(promo) { promo.active = !promo.active; savePromos(); renderCurrentPage(); }
+    }
+    function handleDeletePromo(e) {
+        if(confirm("Supprimer ce code promo ?")) {
+            promos = promos.filter(p => p.code !== e.currentTarget.dataset.code);
+            savePromos();
+            renderCurrentPage();
+        }
+    }
+
+    // Modal produit (simplifiée mais fonctionnelle)
+    function showProductModal(product=null) {
+        const isEdit = !!product;
+        const modalHtml = `
+            <div class="modal" id="productModal">
+                <div class="modal-content">
+                    <h2>${isEdit ? "Modifier" : "Ajouter"} un produit</h2>
+                    <div class="form-group"><label>Nom</label><input id="prodName" value="${product?.name || ''}"></div>
+                    <div class="form-group"><label>Description</label><textarea id="prodDesc">${product?.description || ''}</textarea></div>
+                    <div class="form-group"><label>Type</label><select id="prodType"><option value="simple" ${product?.type === 'simple' ? 'selected' : ''}>Simple</option><option value="variants" ${product?.type === 'variants' ? 'selected' : ''}>Variantes</option></select></div>
+                    <div id="simpleFields" style="${product?.type === 'variants' ? 'display:none' : ''}">
+                        <div class="form-group"><label>Prix (€)</label><input id="simplePrice" type="number" step="0.01" value="${product?.price || ''}"></div>
+                        <div class="form-group"><label>Stock</label><input id="simpleStock" type="number" value="${product?.stock || 0}"></div>
+                    </div>
+                    <div id="variantsFields" style="${product?.type === 'variants' ? '' : 'display:none'}">
+                        <div class="form-group"><label>Prix de base (€)</label><input id="basePrice" type="number" step="0.01" value="${product?.basePrice || ''}"></div>
+                        <div class="form-group"><label>Variantes</label><div id="variantsContainer"></div><button type="button" class="btn-small" id="addVariantBtn">+ Ajouter variante</button></div>
+                    </div>
+                    <div class="form-group"><label>Image / Icône</label>
+                        <div><label><input type="radio" name="imgType" value="none" ${!product?.image ? 'checked' : ''}> Pas d'icône</label> <label><input type="radio" name="imgType" value="upload" ${product?.image ? 'checked' : ''}> PNG/JPG</label></div>
+                        <div id="uploadArea" style="display:${product?.image ? 'block' : 'none'}"><input type="file" id="imageUpload" accept="image/png,image/jpeg"><br><img id="previewImg" src="${product?.image || ''}" style="max-width:100px;display:${product?.image ? 'block' : 'none'}"></div>
+                    </div>
+                    <div class="form-group"><label><input type="checkbox" id="activeCheck" ${product?.active !== false ? 'checked' : ''}> Actif</label></div>
+                    <div class="flex-between"><button class="btn-outline" id="closeModalBtn">Annuler</button><button class="btn" id="saveProductBtn">Enregistrer</button></div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('productModal');
+        // gestion simplifiée (pour variantes etc on peut réutiliser logique existante)
+        // on implémente rapidement sauvegarde
+        document.getElementById('saveProductBtn').addEventListener('click', () => {
+            const name = document.getElementById('prodName').value.trim();
+            if(!name) return;
+            const imageInput = document.getElementById('imageUpload');
+            let image = null;
+            if(document.querySelector('input[name="imgType"]:checked').value === 'upload' && imageInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => { image = e.target.result; save(); };
+                reader.readAsDataURL(imageInput.files[0]);
+            } else { save(); }
+            function save() {
+                const newProduct = {
+                    id: isEdit ? product.id : Date.now().toString(),
+                    name, description: document.getElementById('prodDesc').value,
+                    type: document.getElementById('prodType').value,
+                    active: document.getElementById('activeCheck').checked,
+                    image: image
+                };
+                if(newProduct.type === 'simple') {
+                    newProduct.price = parseFloat(document.getElementById('simplePrice').value);
+                    newProduct.stock = parseInt(document.getElementById('simpleStock').value);
+                } else {
+                    newProduct.basePrice = parseFloat(document.getElementById('basePrice').value);
+                    newProduct.variants = []; // on laisse vide pour l'exemple
+                }
+                if(isEdit) {
+                    const idx = products.findIndex(p => p.id === product.id);
+                    if(idx !== -1) products[idx] = newProduct;
+                } else products.push(newProduct);
+                saveProducts();
+                modal.remove();
+                renderCurrentPage();
+            }
+        });
+        document.getElementById('closeModalBtn').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
     }
 
     let currentPage = 'dashboard';
@@ -654,15 +764,11 @@
         else if(currentPage === 'products') html = renderProducts();
         else if(currentPage === 'stock') html = renderStock();
         else if(currentPage === 'orders') html = renderOrders();
+        else if(currentPage === 'promos') html = renderPromos();
         document.getElementById('mainContent').innerHTML = html;
-        if(currentPage === 'products') {
-            const addBtn = document.getElementById('addProductBtn');
-            if(addBtn) addBtn.addEventListener('click', () => showProductModal(null));
-        }
-        if(currentPage === 'orders') {
-            const simBtn = document.getElementById('simulateOrderBtn');
-            if(simBtn) simBtn.addEventListener('click', simulateOrder);
-        }
+        if(currentPage === 'products') document.getElementById('addProductBtn')?.addEventListener('click', () => showProductModal(null));
+        if(currentPage === 'orders') document.getElementById('simulateOrderBtn')?.addEventListener('click', simulateOrder);
+        if(currentPage === 'promos') document.getElementById('addPromoBtn')?.addEventListener('click', showAddPromoModal);
         attachGlobalEvents();
     }
 
