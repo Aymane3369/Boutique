@@ -18,7 +18,6 @@
             min-height: 100vh;
         }
 
-        /* SIDEBAR */
         .sidebar {
             width: 260px;
             background: #0f172a;
@@ -61,7 +60,6 @@
             color: white;
         }
 
-        /* MAIN */
         .main {
             flex: 1;
             padding: 2rem;
@@ -109,7 +107,6 @@
             font-size: 0.8rem;
         }
 
-        /* Cards dashboard */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -135,7 +132,6 @@
             margin-top: 0.5rem;
         }
 
-        /* Tableaux */
         .table-container {
             background: white;
             border-radius: 20px;
@@ -182,7 +178,6 @@
             font-size: 0.8rem;
         }
 
-        /* Modals & forms */
         .modal {
             position: fixed;
             top: 0;
@@ -218,21 +213,11 @@
             border: 1px solid #cbd5e1;
             border-radius: 12px;
         }
-        .image-preview {
-            margin-top: 10px;
-            max-width: 100px;
-            max-height: 100px;
-            border-radius: 12px;
-            object-fit: cover;
-        }
         .variant-row {
             display: flex;
             gap: 0.5rem;
             margin-bottom: 0.5rem;
             align-items: center;
-        }
-        hr {
-            margin: 1rem 0;
         }
         .flex-between {
             display: flex;
@@ -264,12 +249,10 @@
     <div style="margin-top: auto; font-size: 0.7rem; color:#94a3b8;">Accès admin via Supabase Auth (demo)</div>
 </div>
 
-<div class="main" id="mainContent">
-    <!-- contenu dynamique -->
-</div>
+<div class="main" id="mainContent"></div>
 
 <script>
-    // ---------- Données initiales ----------
+    // ---------- Données initiales avec codes promo ----------
     let products = [
         { id: "p1", name: "T-shirt Classic", description: "Coupe confortable", type: "simple", price: 19.9, stock: 12, image: null, active: true },
         { id: "p2", name: "Sneakers Urban", description: "Tige basse", type: "variants", basePrice: 59.9, variants: [
@@ -290,14 +273,13 @@
     ];
 
     let orders = [
-        { id: "ORD-RYCTHN", client: "marc@mail.com", items: [{ productId: "p1", qty: 1, price: 19.9 }], total: 19.9, status: "Payée", adminFollowup: "À traiter" },
-        { id: "ORD-WCP62J", client: "leo@mail.com", items: [{ productId: "p2", variantId: "v1", qty: 1, price: 59.9 }], total: 39.8, status: "Payée", adminFollowup: "En cours" },
-        { id: "ORD-G7H81J", client: "claire@mail.com", items: [{ productId: "p3", variantId: "v7", qty: 1, price: 59.9 }], total: 59.9, status: "En attente", adminFollowup: "À traiter" },
-        { id: "ORD-D4E5F6", client: "bob@mail.com", items: [{ productId: "p4", qty: 1, price: 24.9 }], total: 89.9, status: "Payée", adminFollowup: "Expédié" },
-        { id: "ORD-A1B2C3", client: "alice@mail.com", items: [{ productId: "p1", qty: 2, price: 19.9 }], total: 69.7, status: "Payée", adminFollowup: "Terminé" }
+        { id: "ORD-RYCTHN", client: "marc@mail.com", items: [{ productId: "p1", qty: 1, price: 19.9 }], total: 19.9, status: "Payée", adminFollowup: "À traiter", promoCode: null, discount: 0 },
+        { id: "ORD-WCP62J", client: "leo@mail.com", items: [{ productId: "p2", variantId: "v1", qty: 1, price: 59.9 }], total: 39.8, status: "Payée", adminFollowup: "En cours", promoCode: "PROMO10", discount: 5 },
+        { id: "ORD-G7H81J", client: "claire@mail.com", items: [{ productId: "p3", variantId: "v7", qty: 1, price: 59.9 }], total: 59.9, status: "En attente", adminFollowup: "À traiter", promoCode: "BIENVENUE", discount: 10 },
+        { id: "ORD-D4E5F6", client: "bob@mail.com", items: [{ productId: "p4", qty: 1, price: 24.9 }], total: 89.9, status: "Payée", adminFollowup: "Expédié", promoCode: null, discount: 0 },
+        { id: "ORD-A1B2C3", client: "alice@mail.com", items: [{ productId: "p1", qty: 2, price: 19.9 }, { productId: "p4", qty: 1, price: 24.9 }], total: 69.7, status: "Payée", adminFollowup: "Terminé", promoCode: "BLACKFRIDAY", discount: 15 }
     ];
 
-    // Load from localStorage
     function loadData() {
         const storedProducts = localStorage.getItem("styleshop_products");
         if(storedProducts) products = JSON.parse(storedProducts);
@@ -306,10 +288,8 @@
     }
     function saveProducts() { localStorage.setItem("styleshop_products", JSON.stringify(products)); }
     function saveOrders() { localStorage.setItem("styleshop_orders", JSON.stringify(orders)); }
-
     loadData();
 
-    // Helper: Calculs dashboard
     function getStats() {
         let totalProducts = products.length;
         let activeProducts = products.filter(p => p.active !== false).length;
@@ -328,81 +308,71 @@
         return { totalProducts, activeProducts, totalStock, revenue, ordersCount: orders.length, lowStockItems };
     }
 
-    // Rendu Dashboard - Version avec affichage "Produits X / Y actifs" et "Commandes Z / W payées"
+    // Rendu Dashboard avec colonne promo
     function renderDashboard() {
         const stats = getStats();
         const paidOrdersCount = orders.filter(o => o.status === "Payée").length;
         return `
             <div class="page-header"><h1>Dashboard</h1></div>
             <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-title">📦 PRODUITS</div>
-                    <div class="stat-value">${stats.totalProducts}</div>
-                    <div style="font-size:0.9rem; color:#475569;">${stats.activeProducts} actifs</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">🛒 COMMANDES</div>
-                    <div class="stat-value">${stats.ordersCount}</div>
-                    <div style="font-size:0.9rem; color:#475569;">${paidOrdersCount} payées</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">💰 CHIFFRE D'AFFAIRES</div>
-                    <div class="stat-value">${stats.revenue.toFixed(2)} €</div>
-                    <div style="font-size:0.9rem; color:#475569;">commandes payées</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">⚠️ STOCK BAS</div>
-                    <div class="stat-value">${stats.lowStockItems}</div>
-                    <div style="font-size:0.9rem; color:#475569;">article(s) sous seuil</div>
-                </div>
+                <div class="stat-card"><div class="stat-title">📦 PRODUITS</div><div class="stat-value">${stats.totalProducts}</div><div style="font-size:0.9rem;">${stats.activeProducts} actifs</div></div>
+                <div class="stat-card"><div class="stat-title">🛒 COMMANDES</div><div class="stat-value">${stats.ordersCount}</div><div style="font-size:0.9rem;">${paidOrdersCount} payées</div></div>
+                <div class="stat-card"><div class="stat-title">💰 CHIFFRE D'AFFAIRES</div><div class="stat-value">${stats.revenue.toFixed(2)} €</div><div style="font-size:0.9rem;">commandes payées</div></div>
+                <div class="stat-card"><div class="stat-title">⚠️ STOCK BAS</div><div class="stat-value">${stats.lowStockItems}</div><div style="font-size:0.9rem;">article(s) sous seuil</div></div>
             </div>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Dernières commandes</th><th>Client</th><th>Total</th><th>Statut</th><th>Suivi admin</th></tr></thead>
+                    <thead><tr><th>N° commande</th><th>Client</th><th>Total</th><th>Code promo / Réduction</th><th>Statut</th><th>Suivi admin</th></tr></thead>
                     <tbody>
-                        ${orders.slice(0,5).map(o => `<tr>
-                            <td>${o.id}</td><td>${o.client}</td><td>${o.total} €</td>
-                            <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
-                            <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
-                        <tr>`).join('')}
+                        ${orders.slice(0,5).map(o => `
+                            <tr>
+                                <td>${o.id}</td><td>${o.client}</td><td>${o.total} €</td>
+                                <td>${o.promoCode ? `${o.promoCode} (‑${o.discount}€)` : "—"}</td>
+                                <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
+                                <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
+                            </tr>
+                        `).join('')}
                     </tbody>
                 </table>
             </div>
         `;
     }
 
-    // Rendu produits (liste + modal ajout/modif)
-    let currentEditProduct = null;
-
+    // Produits : colonnes déjà correctes (Image, Nom, Type, Prix, Stock, Actif, Actions)
     function renderProducts() {
         return `
             <div class="page-header"><h1>Produits</h1><button class="btn" id="addProductBtn">+ Ajouter produit</button></div>
-            <div class="table-container"><table><thead><tr><th>Image</th><th>Nom</th><th>Type</th><th>Prix</th><th>Stock</th><th>Actif</th><th>Actions</th></tr></thead><tbody>
-                ${products.map(p => {
-                    let priceDisplay = p.type === "simple" ? `${p.price} €` : `à partir de ${p.basePrice} €`;
-                    let stockDisplay = p.type === "simple" ? p.stock : (p.variants?.reduce((s,v)=>s+v.stock,0) || 0);
-                    let imgHtml = p.image ? `<img class="product-img-list" src="${p.image}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">` : (p.iconText || "📦");
-                    if(!p.image && !p.iconText) imgHtml = "🖼️";
-                    return `<tr
-                        <td>${imgHtml}</td><td>${p.name}</td><td>${p.type === "simple" ? "Simple" : "Variantes"}</td><td>${priceDisplay}</td><td>${stockDisplay}</td>
-                        <td>${p.active !== false ? "✅" : "❌"}</td>
-                        <td><button class="btn-small btn-outline edit-product" data-id="${p.id}">Modifier</button> <button class="btn-small btn-danger delete-product" data-id="${p.id}">Supprimer</button></td>
-                    </tr>`;
-                }).join('')}
-            </tbody></table></div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Image</th><th>Nom</th><th>Type</th><th>Prix</th><th>Stock</th><th>Actif</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        ${products.map(p => {
+                            let priceDisplay = p.type === "simple" ? `${p.price} €` : `à partir de ${p.basePrice} €`;
+                            let stockDisplay = p.type === "simple" ? p.stock : (p.variants?.reduce((s,v)=>s+v.stock,0) || 0);
+                            let imgHtml = p.image ? `<img class="product-img-list" src="${p.image}" style="width:40px;height:40px;">` : (p.iconText || "🖼️");
+                            return `<tr>
+                                <td>${imgHtml}</td><td>${p.name}</td><td>${p.type === "simple" ? "Simple" : "Variantes"}</td>
+                                <td>${priceDisplay}</td><td>${stockDisplay}</td>
+                                <td>${p.active !== false ? "✅" : "❌"}</td>
+                                <td><button class="btn-small btn-outline edit-product" data-id="${p.id}">Modifier</button> <button class="btn-small btn-danger delete-product" data-id="${p.id}">Supprimer</button></td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
         `;
     }
 
-    // Modal ajout / modification produit
+    // Modal produit (identique)
     function showProductModal(product=null) {
         const isEdit = !!product;
         let formHtml = `
             <div class="modal" id="productModal">
                 <div class="modal-content">
                     <h2>${isEdit ? "Modifier" : "Ajouter"} un produit</h2>
-                    <div class="form-group"><label>Nom</label><input id="prodName" value="${product?.name || ''}" placeholder="Ex: T-shirt Classic"></div>
+                    <div class="form-group"><label>Nom</label><input id="prodName" value="${product?.name || ''}"></div>
                     <div class="form-group"><label>Description</label><textarea id="prodDesc">${product?.description || ''}</textarea></div>
-                    <div class="form-group"><label>Type</label><select id="prodType"><option value="simple" ${product?.type === 'simple' ? 'selected' : ''}>Produit simple</option><option value="variants" ${product?.type === 'variants' ? 'selected' : ''}>Avec variantes</option></select></div>
+                    <div class="form-group"><label>Type</label><select id="prodType"><option value="simple" ${product?.type === 'simple' ? 'selected' : ''}>Simple</option><option value="variants" ${product?.type === 'variants' ? 'selected' : ''}>Avec variantes</option></select></div>
                     <div id="simpleFields" style="${product?.type === 'variants' ? 'display:none' : ''}">
                         <div class="form-group"><label>Prix (€)</label><input id="simplePrice" type="number" step="0.01" value="${product?.price || ''}"></div>
                         <div class="form-group"><label>Stock</label><input id="simpleStock" type="number" value="${product?.stock || 0}"></div>
@@ -412,11 +382,10 @@
                         <div class="form-group"><label>Variantes</label><div id="variantsContainer"></div><button type="button" class="btn-small" id="addVariantBtn">+ Ajouter variante</button></div>
                     </div>
                     <div class="form-group"><label>Image / Icône</label>
-                        <div><label><input type="radio" name="imgType" value="none" ${!product?.image ? 'checked' : ''}> Pas d'icône</label> &nbsp;
-                        <label><input type="radio" name="imgType" value="upload" ${product?.image ? 'checked' : ''}> Télécharger image (PNG/JPG)</label></div>
-                        <div id="uploadArea" style="display:${product?.image ? 'block' : 'none'}"><input type="file" id="imageUpload" accept="image/png,image/jpeg,image/jpg"><br><img id="previewImg" src="${product?.image || ''}" style="max-width:100px;margin-top:8px;display:${product?.image ? 'block' : 'none'}"></div>
+                        <div><label><input type="radio" name="imgType" value="none" ${!product?.image ? 'checked' : ''}> Pas d'icône</label> <label><input type="radio" name="imgType" value="upload" ${product?.image ? 'checked' : ''}> PNG/JPG</label></div>
+                        <div id="uploadArea" style="display:${product?.image ? 'block' : 'none'}"><input type="file" id="imageUpload" accept="image/png,image/jpeg"><br><img id="previewImg" src="${product?.image || ''}" style="max-width:100px;display:${product?.image ? 'block' : 'none'}"></div>
                     </div>
-                    <div class="form-group"><label><input type="checkbox" id="activeCheck" ${product?.active !== false ? 'checked' : ''}> Produit actif</label></div>
+                    <div class="form-group"><label><input type="checkbox" id="activeCheck" ${product?.active !== false ? 'checked' : ''}> Actif</label></div>
                     <div class="flex-between"><button class="btn-outline" id="closeModalBtn">Annuler</button><button class="btn" id="saveProductBtn">Enregistrer</button></div>
                 </div>
             </div>
@@ -438,8 +407,6 @@
             variantsDiv.style.display = isVariants ? 'block' : 'none';
         }
         typeSelect.addEventListener('change', toggleVariantSimple);
-        
-        // Gestion upload image
         radioNone.addEventListener('change', () => { uploadArea.style.display = 'none'; preview.style.display='none'; });
         radioUpload.addEventListener('change', () => { uploadArea.style.display = 'block'; });
         fileInput.addEventListener('change', (e) => {
@@ -451,7 +418,6 @@
             } else alert("Seulement PNG ou JPG");
         });
 
-        // Gestion variantes dynamiques
         let variantsArray = product?.variants ? [...product.variants] : [];
         function renderVariants() {
             const container = document.getElementById('variantsContainer');
@@ -490,9 +456,7 @@
             const description = document.getElementById('prodDesc').value;
             const active = document.getElementById('activeCheck').checked;
             let image = null;
-            if(radioUpload.checked && fileInput.files[0]) image = preview.src; // base64
-            else image = null; // pas d'icône
-
+            if(radioUpload.checked && fileInput.files[0]) image = preview.src;
             if(typeSelect.value === 'simple') {
                 const price = parseFloat(document.getElementById('simplePrice').value);
                 const stock = parseInt(document.getElementById('simpleStock').value);
@@ -505,7 +469,6 @@
             } else {
                 const basePrice = parseFloat(document.getElementById('basePrice').value);
                 if(isNaN(basePrice)) return alert("Prix de base requis");
-                // collect variants
                 const finalVariants = [];
                 document.querySelectorAll('#variantsContainer .variant-row').forEach((row, idx) => {
                     const attrs = row.querySelector(`[data-field="attrs${idx}"]`)?.value || '';
@@ -523,12 +486,11 @@
             modal.remove();
             renderCurrentPage();
         });
-
         document.getElementById('closeModalBtn').addEventListener('click', () => modal.remove());
         modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
     }
 
-    // Rendu Stock (tableau avec ajustement)
+    // Stock (inchangé)
     function renderStock() {
         let rows = [];
         products.forEach(p => {
@@ -542,21 +504,23 @@
         });
         return `
             <div class="page-header"><h1>Gestion du stock</h1></div>
-            <div class="table-container"><table><thead><tr><th>Produit</th><th>Variante</th><th>Stock actuel</th><th>Ajuster</th></tr></thead><tbody>
-                ${rows.map(r => `
-                    <tr
-                        <td>${r.name}</td><td>${r.variant}</td>
-                        <td>${r.stock === 0 ? "Rupture" : r.stock <= 2 ? `Bas (${r.stock})` : r.stock}</td>
-                        <td><button class="btn-small stock-down" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">-</button> 
-                        <span style="margin:0 8px">${r.stock}</span> 
-                        <button class="btn-small stock-up" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">+</button></td>
-                    </tr>
-                `).join('')}
-            </tbody></table></div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Produit</th><th>Variante</th><th>Stock actuel</th><th>Ajuster</th></tr></thead>
+                    <tbody>
+                        ${rows.map(r => `
+                            <tr>
+                                <td>${r.name}</td><td>${r.variant}</td>
+                                <td>${r.stock === 0 ? "Rupture" : r.stock <= 2 ? `Bas (${r.stock})` : r.stock}</td>
+                                <td><button class="btn-small stock-down" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">-</button> <span style="margin:0 8px">${r.stock}</span> <button class="btn-small stock-up" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">+</button></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
         `;
     }
 
-    // Gestion modifications stock
     function updateStock(productId, variantId, delta, isVariant) {
         const product = products.find(p => p.id === productId);
         if(!product) return;
@@ -576,49 +540,80 @@
         renderCurrentPage();
     }
 
-    // Rendu commandes avec suivi admin
+    // Commandes avec colonne promo
     function renderOrders() {
         return `
             <div class="page-header"><h1>Commandes (${orders.length})</h1><button class="btn" id="simulateOrderBtn">+ Simuler commande</button></div>
-            <div class="table-container"><table><thead><tr><th>N° commande</th><th>Client</th><th>Articles</th><th>Total</th><th>Statut</th><th>Suivi admin</th><th>Actions</th></tr></thead><tbody>
-                ${orders.map(o => `<tr
-                    <td>${o.id}</td><td>${o.client}</td><td>${o.items?.length || 1} article(s)</td><td>${o.total} €</td>
-                    <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
-                    <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
-                    <td><button class="btn-small btn-danger delete-order" data-id="${o.id}">Supprimer</button></td>
-                </tr>`).join('')}
-            </tbody></table></div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>N° commande</th><th>Client</th><th>Articles</th><th>Total</th><th>Code promo / Réduction</th><th>Statut</th><th>Suivi admin</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        ${orders.map(o => `
+                            <tr>
+                                <td>${o.id}</td><td>${o.client}</td><td>${o.items?.length || 1} article(s)</td><td>${o.total} €</td>
+                                <td>${o.promoCode ? `${o.promoCode} (‑${o.discount}€)` : "—"}</td>
+                                <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
+                                <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
+                                <td><button class="btn-small btn-danger delete-order" data-id="${o.id}">Supprimer</button></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
         `;
     }
 
+    function simulateOrder() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let newId = 'ORD-' + Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+        const randClient = `client${Math.floor(Math.random()*100)}@demo.com`;
+        let baseTotal = parseFloat((Math.random() * 100 + 10).toFixed(2));
+        const hasPromo = Math.random() > 0.5;
+        let promoCode = null, discount = 0;
+        if(hasPromo) {
+            const promos = [["PROMO10", 5], ["BIENVENUE", 10], ["SOLDES20", 8], ["BLACKFRIDAY", 15]];
+            const pick = promos[Math.floor(Math.random() * promos.length)];
+            promoCode = pick[0];
+            discount = pick[1];
+            baseTotal = Math.max(0, baseTotal - discount);
+        }
+        const newOrder = {
+            id: newId,
+            client: randClient,
+            items: [{ productId: "p1", qty: 1, price: baseTotal + discount }],
+            total: parseFloat(baseTotal.toFixed(2)),
+            status: Math.random() > 0.6 ? "Payée" : "En attente",
+            adminFollowup: "À traiter",
+            promoCode: promoCode,
+            discount: discount
+        };
+        orders.unshift(newOrder);
+        saveOrders();
+        renderCurrentPage();
+    }
+
     function attachGlobalEvents() {
-        // Suivi admin change
         document.querySelectorAll('.status-admin').forEach(sel => {
             sel.removeEventListener('change', handleAdminChange);
             sel.addEventListener('change', handleAdminChange);
         });
-        // Stock buttons
         document.querySelectorAll('.stock-up, .stock-down').forEach(btn => {
             btn.removeEventListener('click', handleStockClick);
             btn.addEventListener('click', handleStockClick);
         });
-        // Delete product
         document.querySelectorAll('.delete-product').forEach(btn => {
             btn.removeEventListener('click', handleDeleteProduct);
             btn.addEventListener('click', handleDeleteProduct);
         });
-        // Edit product
         document.querySelectorAll('.edit-product').forEach(btn => {
             btn.removeEventListener('click', handleEditProduct);
             btn.addEventListener('click', handleEditProduct);
         });
-        // Delete order
         document.querySelectorAll('.delete-order').forEach(btn => {
             btn.removeEventListener('click', handleDeleteOrder);
             btn.addEventListener('click', handleDeleteOrder);
         });
     }
-
     function handleAdminChange(e) {
         const orderId = e.target.dataset.orderId;
         const newValue = e.target.value;
@@ -628,10 +623,7 @@
     function handleStockClick(e) {
         const btn = e.currentTarget;
         const delta = btn.classList.contains('stock-up') ? 1 : -1;
-        const productId = btn.dataset.pid;
-        const variantId = btn.dataset.vid;
-        const isVariant = btn.dataset.isvar === 'true';
-        updateStock(productId, variantId, delta, isVariant);
+        updateStock(btn.dataset.pid, btn.dataset.vid, delta, btn.dataset.isvar === 'true');
     }
     function handleDeleteProduct(e) {
         const id = e.currentTarget.dataset.id;
@@ -655,24 +647,6 @@
         }
     }
 
-    function simulateOrder() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let newId = 'ORD-' + Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
-        const randClient = `client${Math.floor(Math.random()*100)}@demo.com`;
-        const randTotal = (Math.random() * 100 + 10).toFixed(2);
-        const newOrder = {
-            id: newId,
-            client: randClient,
-            items: [{ productId: "p1", qty: 1, price: randTotal }],
-            total: parseFloat(randTotal),
-            status: Math.random() > 0.6 ? "Payée" : "En attente",
-            adminFollowup: "À traiter"
-        };
-        orders.unshift(newOrder);
-        saveOrders();
-        renderCurrentPage();
-    }
-
     let currentPage = 'dashboard';
     function renderCurrentPage() {
         let html = '';
@@ -694,7 +668,7 @@
 
     function initNavigation() {
         document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
+            item.addEventListener('click', () => {
                 document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
                 currentPage = item.dataset.page;
@@ -703,7 +677,6 @@
         });
         renderCurrentPage();
     }
-
     initNavigation();
 </script>
 </body>
