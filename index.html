@@ -127,6 +127,7 @@
             font-size: 0.85rem;
             text-transform: uppercase;
             color: #475569;
+            font-weight: 600;
         }
         .stat-value {
             font-size: 2rem;
@@ -327,22 +328,46 @@
         return { totalProducts, activeProducts, totalStock, revenue, ordersCount: orders.length, lowStockItems };
     }
 
-    // Rendu Dashboard
+    // Rendu Dashboard - Version avec affichage "Produits X / Y actifs" et "Commandes Z / W payées"
     function renderDashboard() {
         const stats = getStats();
+        const paidOrdersCount = orders.filter(o => o.status === "Payée").length;
         return `
             <div class="page-header"><h1>Dashboard</h1></div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="stat-title">Produits actifs</div><div class="stat-value">${stats.activeProducts} / ${stats.totalProducts}</div></div>
-                <div class="stat-card"><div class="stat-title">Commandes</div><div class="stat-value">${stats.ordersCount}</div></div>
-                <div class="stat-card"><div class="stat-title">Chiffre d'affaires (payées)</div><div class="stat-value">${stats.revenue.toFixed(2)} €</div></div>
-                <div class="stat-card"><div class="stat-title">Stock total</div><div class="stat-value">${stats.totalStock} unités</div></div>
-                <div class="stat-card"><div class="stat-title">Alertes stock bas</div><div class="stat-value">${stats.lowStockItems}</div></div>
+                <div class="stat-card">
+                    <div class="stat-title">📦 PRODUITS</div>
+                    <div class="stat-value">${stats.totalProducts}</div>
+                    <div style="font-size:0.9rem; color:#475569;">${stats.activeProducts} actifs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">🛒 COMMANDES</div>
+                    <div class="stat-value">${stats.ordersCount}</div>
+                    <div style="font-size:0.9rem; color:#475569;">${paidOrdersCount} payées</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">💰 CHIFFRE D'AFFAIRES</div>
+                    <div class="stat-value">${stats.revenue.toFixed(2)} €</div>
+                    <div style="font-size:0.9rem; color:#475569;">commandes payées</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">⚠️ STOCK BAS</div>
+                    <div class="stat-value">${stats.lowStockItems}</div>
+                    <div style="font-size:0.9rem; color:#475569;">article(s) sous seuil</div>
+                </div>
             </div>
-            <div class="table-container"><table><thead><tr><th>Dernières commandes</th><th>Client</th><th>Total</th><th>Statut</th><th>Suivi admin</th></tr></thead><tbody>
-                ${orders.slice(0,5).map(o => `<tr><td>${o.id}</td><td>${o.client}</td><td>${o.total} €</td><td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
-                <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td></tr>`).join('')}
-            </tbody></table></div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Dernières commandes</th><th>Client</th><th>Total</th><th>Statut</th><th>Suivi admin</th></tr></thead>
+                    <tbody>
+                        ${orders.slice(0,5).map(o => `<tr>
+                            <td>${o.id}</td><td>${o.client}</td><td>${o.total} €</td>
+                            <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
+                            <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
+                        <tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
         `;
     }
 
@@ -358,7 +383,7 @@
                     let stockDisplay = p.type === "simple" ? p.stock : (p.variants?.reduce((s,v)=>s+v.stock,0) || 0);
                     let imgHtml = p.image ? `<img class="product-img-list" src="${p.image}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">` : (p.iconText || "📦");
                     if(!p.image && !p.iconText) imgHtml = "🖼️";
-                    return `<tr>
+                    return `<tr
                         <td>${imgHtml}</td><td>${p.name}</td><td>${p.type === "simple" ? "Simple" : "Variantes"}</td><td>${priceDisplay}</td><td>${stockDisplay}</td>
                         <td>${p.active !== false ? "✅" : "❌"}</td>
                         <td><button class="btn-small btn-outline edit-product" data-id="${p.id}">Modifier</button> <button class="btn-small btn-danger delete-product" data-id="${p.id}">Supprimer</button></td>
@@ -519,7 +544,7 @@
             <div class="page-header"><h1>Gestion du stock</h1></div>
             <div class="table-container"><table><thead><tr><th>Produit</th><th>Variante</th><th>Stock actuel</th><th>Ajuster</th></tr></thead><tbody>
                 ${rows.map(r => `
-                    <tr>
+                    <tr
                         <td>${r.name}</td><td>${r.variant}</td>
                         <td>${r.stock === 0 ? "Rupture" : r.stock <= 2 ? `Bas (${r.stock})` : r.stock}</td>
                         <td><button class="btn-small stock-down" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">-</button> 
@@ -556,7 +581,7 @@
         return `
             <div class="page-header"><h1>Commandes (${orders.length})</h1><button class="btn" id="simulateOrderBtn">+ Simuler commande</button></div>
             <div class="table-container"><table><thead><tr><th>N° commande</th><th>Client</th><th>Articles</th><th>Total</th><th>Statut</th><th>Suivi admin</th><th>Actions</th></tr></thead><tbody>
-                ${orders.map(o => `<tr>
+                ${orders.map(o => `<tr
                     <td>${o.id}</td><td>${o.client}</td><td>${o.items?.length || 1} article(s)</td><td>${o.total} €</td>
                     <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
                     <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
