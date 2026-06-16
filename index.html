@@ -167,7 +167,7 @@
         .modal-content {
             background: white;
             border-radius: 28px;
-            max-width: 700px;
+            max-width: 750px;
             width: 90%;
             padding: 1.8rem;
             max-height: 85vh;
@@ -193,6 +193,10 @@
             object-fit: cover;
             border-radius: 8px;
             background: #f1f5f9;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .flex-between {
             display: flex;
@@ -215,6 +219,36 @@
             margin-top: 8px;
             border-radius: 8px;
         }
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 60px));
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        .emoji-option {
+            font-size: 32px;
+            background: #f1f5f9;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .emoji-option:hover {
+            background: #e2e8f0;
+            transform: scale(1.05);
+        }
+        .emoji-option.selected {
+            border-color: #3b82f6;
+            background: #dbeafe;
+        }
+        .icon-preview {
+            font-size: 40px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -234,7 +268,7 @@
 <script>
     // ---------- Données initiales ----------
     let products = [
-        { id: "p1", name: "T-shirt Classic", description: "Coupe confortable", type: "simple", price: 19.9, stock: 12, image: null, active: true },
+        { id: "p1", name: "T-shirt Classic", description: "Coupe confortable", type: "simple", price: 19.9, stock: 12, image: null, icon: "👕", active: true },
         { id: "p2", name: "Sneakers Urban", description: "Tige basse", type: "variants", basePrice: 59.9, variants: [
             { id: "v1", attributes: "38 / Blanc", stock: 5, price: 59.9 },
             { id: "v2", attributes: "39 / Blanc", stock: 3, price: 59.9 },
@@ -242,14 +276,14 @@
             { id: "v4", attributes: "38 / Noir", stock: 8, price: 59.9 },
             { id: "v5", attributes: "39 / Noir", stock: 2, price: 59.9 },
             { id: "v6", attributes: "40 / Noir", stock: 4, price: 59.9 }
-        ], image: null },
+        ], image: null, icon: "👟" },
         { id: "p3", name: "Hoodie Premium", description: "Molleton épais", type: "variants", basePrice: 79.9, variants: [
             { id: "v7", attributes: "S / Gris", stock: 6, price: 79.9 },
             { id: "v8", attributes: "M / Gris", stock: 10, price: 79.9 },
             { id: "v9", attributes: "L / Gris", stock: 3, price: 79.9 }
-        ], image: null },
-        { id: "p4", name: "Casquette Logo", description: "Coton bio", type: "simple", price: 24.9, stock: 2, image: null, active: true },
-        { id: "p5", name: "Chaussettes Pack", description: "Lot x3", type: "simple", price: 12.9, stock: 0, image: null, active: true }
+        ], image: null, icon: "🧥" },
+        { id: "p4", name: "Casquette Logo", description: "Coton bio", type: "simple", price: 24.9, stock: 2, image: null, icon: "🧢", active: true },
+        { id: "p5", name: "Chaussettes Pack", description: "Lot x3", type: "simple", price: 12.9, stock: 0, image: null, icon: "🧦", active: true }
     ];
 
     let orders = [
@@ -280,7 +314,13 @@
     loadData();
 
     function getProductById(id) { return products.find(p => p.id === id); }
-    function getProductImage(product) { return product.image ? `<img class="product-img-list" src="${product.image}">` : "🖼️"; }
+    
+    // Affichage de l'icône (image ou émoji)
+    function getProductIcon(product) {
+        if(product.image) return `<img class="product-img-list" src="${product.image}">`;
+        if(product.icon) return `<div class="product-img-list" style="font-size:28px;">${product.icon}</div>`;
+        return `<div class="product-img-list" style="font-size:28px;">📦</div>`;
+    }
 
     // Dashboard 6 cartes
     function getStockStats() {
@@ -349,14 +389,14 @@
             <div class="page-header"><h1>Produits</h1><button class="btn" id="addProductBtn">+ Ajouter produit</button></div>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Image</th><th>Nom</th><th>Type</th><th>Prix</th><th>Stock</th><th>Actif</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Icône</th><th>Nom</th><th>Type</th><th>Prix</th><th>Stock</th><th>Actif</th><th>Actions</th></tr></thead>
                     <tbody>
                         ${products.map(p => {
                             let priceDisplay = p.type === "simple" ? `${p.price} €` : `à partir de ${p.basePrice} €`;
                             let stockDisplay = p.type === "simple" ? p.stock : (p.variants?.reduce((s,v)=>s+v.stock,0) || 0);
-                            let imgHtml = getProductImage(p);
+                            let iconHtml = getProductIcon(p);
                             return `<tr>
-                                <td>${imgHtml}</td>
+                                <td>${iconHtml}</td>
                                 <td>${p.name}</td>
                                 <td>${p.type === "simple" ? "Simple" : "Variantes"}</td>
                                 <td>${priceDisplay}</td>
@@ -371,15 +411,15 @@
         `;
     }
 
-    // Stock avec image
+    // Stock avec icône
     function renderStock() {
         let rows = [];
         products.forEach(p => {
             if(p.type === "simple") {
-                rows.push({ name: p.name, variant: "Simple", stock: p.stock, productId: p.id, variantId: null, isVariant: false, image: p.image });
+                rows.push({ name: p.name, variant: "Simple", stock: p.stock, productId: p.id, variantId: null, isVariant: false, icon: p.icon, image: p.image });
             } else if(p.variants) {
                 p.variants.forEach(v => {
-                    rows.push({ name: p.name, variant: v.attributes, stock: v.stock, productId: p.id, variantId: v.id, isVariant: true, image: p.image });
+                    rows.push({ name: p.name, variant: v.attributes, stock: v.stock, productId: p.id, variantId: v.id, isVariant: true, icon: p.icon, image: p.image });
                 });
             }
         });
@@ -387,17 +427,18 @@
             <div class="page-header"><h1>Gestion du stock</h1></div>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Image</th><th>Produit</th><th>Variante</th><th>Stock actuel</th><th>Ajuster</th></tr></thead>
+                    <thead><tr><th>Icône</th><th>Produit</th><th>Variante</th><th>Stock actuel</th><th>Ajuster</th></tr></thead>
                     <tbody>
-                        ${rows.map(r => `
-                            <tr>
-                                <td>${r.image ? `<img class="product-img-list" src="${r.image}">` : "🖼️"}</td>
+                        ${rows.map(r => {
+                            let iconDisplay = r.image ? `<img class="product-img-list" src="${r.image}">` : (r.icon ? `<div class="product-img-list" style="font-size:28px;">${r.icon}</div>` : `<div class="product-img-list" style="font-size:28px;">📦</div>`);
+                            return `<tr>
+                                <td>${iconDisplay}</td>
                                 <td>${r.name}</td>
                                 <td>${r.variant}</td>
                                 <td>${r.stock === 0 ? "Rupture" : r.stock <= 2 ? `Bas (${r.stock})` : r.stock}</td>
                                 <td><button class="btn-small stock-down" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">-</button> <span style="margin:0 8px">${r.stock}</span> <button class="btn-small stock-up" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">+</button></td>
-                            </tr>
-                        `).join('')}
+                            </tr>`;
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -417,7 +458,7 @@
         renderCurrentPage();
     }
 
-    // Détail commande
+    // Détail commande (identique)
     function showOrderDetail(order) {
         const productNames = order.items.map(item => {
             const prod = getProductById(item.productId);
@@ -530,7 +571,6 @@
         modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
     }
 
-    // Commandes
     function renderOrders() {
         return `
             <div class="page-header"><h1>Commandes (${orders.length})</h1><button class="btn" id="simulateOrderBtn">+ Simuler commande</button></div>
@@ -554,7 +594,6 @@
         `;
     }
 
-    // Promos
     function renderPromos() {
         return `
             <div class="page-header"><h1>Codes promo</h1><button class="btn" id="addPromoBtn">+ Créer un code</button></div>
@@ -570,7 +609,7 @@
                             <td><button class="btn-small btn-outline toggle-promo" data-code="${p.code}">Toggle actif</button> <button class="btn-small btn-danger delete-promo" data-code="${p.code}">Supprimer</button></td>
                         </tr>`).join('')}
                     </tbody>
-                </table>
+                </tr>
             </div>
         `;
     }
@@ -632,11 +671,13 @@
         renderCurrentPage();
     }
 
-    // ---------- MODAL PRODUIT CORRIGÉE ----------
+    // ---------- MODAL PRODUIT AVEC ÉMOJIS ----------
+    const emojiList = ["👕", "👖", "👟", "🧥", "🧢", "🧦", "🧤", "🕶️", "👗", "👚", "🎒", "👔", "💼", "👠", "👡", "🩳", "🧣", "🧦", "👑", "📿"];
+
     function showProductModal(product = null) {
         const isEdit = !!product;
-        // Préparer les variantes existantes
         let variantsArray = product?.variants ? [...product.variants] : [];
+        let selectedEmoji = product?.icon || "📦";
         
         const modalHtml = `
             <div class="modal" id="productModal">
@@ -663,10 +704,16 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>Image / Icône</label>
-                        <div>
-                            <label><input type="radio" name="imgType" value="none" ${!product?.image ? 'checked' : ''}> Pas d'icône</label>
-                            <label><input type="radio" name="imgType" value="upload" ${product?.image ? 'checked' : ''}> Télécharger une image (PNG/JPG)</label>
+                        <label>Icône / Image</label>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <label><input type="radio" name="iconType" value="emoji" ${!product?.image ? 'checked' : ''}> Choisir un émoji</label>
+                            <label><input type="radio" name="iconType" value="upload" ${product?.image ? 'checked' : ''}> Télécharger une image (PNG/JPG)</label>
+                            <label><input type="radio" name="iconType" value="none" ${(!product?.image && !product?.icon) ? 'checked' : ''}> Pas d'icône</label>
+                        </div>
+                        <div id="emojiSelector" style="margin-top: 10px;">
+                            <div class="emoji-grid" id="emojiGrid"></div>
+                            <div class="form-group" style="margin-top: 10px;"><label>Ou saisis ton émoji :</label><input type="text" id="customEmoji" placeholder="ex: 🚀" maxlength="2" style="width: 80px;"></div>
+                            <div>Aperçu : <span id="emojiPreview" class="icon-preview">${selectedEmoji}</span></div>
                         </div>
                         <div id="uploadArea" style="display:${product?.image ? 'block' : 'none'}; margin-top:0.5rem;">
                             <input type="file" id="imageUpload" accept="image/png,image/jpeg">
@@ -687,17 +734,92 @@
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         const modal = document.getElementById('productModal');
         
-        // Éléments du DOM
+        // Remplir la grille d'émojis
+        const emojiGrid = document.getElementById('emojiGrid');
+        emojiList.forEach(emoji => {
+            const div = document.createElement('div');
+            div.className = 'emoji-option';
+            if(emoji === selectedEmoji) div.classList.add('selected');
+            div.textContent = emoji;
+            div.addEventListener('click', () => {
+                document.querySelectorAll('.emoji-option').forEach(el => el.classList.remove('selected'));
+                div.classList.add('selected');
+                document.getElementById('customEmoji').value = '';
+                document.getElementById('emojiPreview').textContent = emoji;
+                selectedEmoji = emoji;
+            });
+            emojiGrid.appendChild(div);
+        });
+        
+        // Gestion des radios
+        const radioEmoji = document.querySelector('input[name="iconType"][value="emoji"]');
+        const radioUpload = document.querySelector('input[name="iconType"][value="upload"]');
+        const radioNone = document.querySelector('input[name="iconType"][value="none"]');
+        const emojiSelectorDiv = document.getElementById('emojiSelector');
+        const uploadAreaDiv = document.getElementById('uploadArea');
+        const customEmojiInput = document.getElementById('customEmoji');
+        const emojiPreviewSpan = document.getElementById('emojiPreview');
+        
+        function toggleIconFields() {
+            if(radioEmoji.checked) {
+                emojiSelectorDiv.style.display = 'block';
+                uploadAreaDiv.style.display = 'none';
+            } else if(radioUpload.checked) {
+                emojiSelectorDiv.style.display = 'none';
+                uploadAreaDiv.style.display = 'block';
+            } else {
+                emojiSelectorDiv.style.display = 'none';
+                uploadAreaDiv.style.display = 'none';
+            }
+        }
+        radioEmoji.addEventListener('change', toggleIconFields);
+        radioUpload.addEventListener('change', toggleIconFields);
+        radioNone.addEventListener('change', toggleIconFields);
+        toggleIconFields();
+        
+        customEmojiInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if(val) {
+                // Désélectionner les émojis de la grille
+                document.querySelectorAll('.emoji-option').forEach(el => el.classList.remove('selected'));
+                emojiPreviewSpan.textContent = val;
+                selectedEmoji = val;
+            } else if(radioEmoji.checked) {
+                // Si vide, reprendre le premier sélectionné ou par défaut
+                const firstSelected = document.querySelector('.emoji-option.selected');
+                if(firstSelected) {
+                    emojiPreviewSpan.textContent = firstSelected.textContent;
+                    selectedEmoji = firstSelected.textContent;
+                } else {
+                    emojiPreviewSpan.textContent = "📦";
+                    selectedEmoji = "📦";
+                }
+            }
+        });
+        
+        // Gestion upload image
+        const fileInput = document.getElementById('imageUpload');
+        const previewImg = document.getElementById('previewImg');
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    previewImg.src = ev.target.result;
+                    previewImg.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert("Seulement PNG ou JPG");
+                fileInput.value = '';
+            }
+        });
+        
+        // Gestion des variantes
         const typeSelect = document.getElementById('prodType');
         const simpleDiv = document.getElementById('simpleFields');
         const variantsDiv = document.getElementById('variantsFields');
-        const uploadArea = document.getElementById('uploadArea');
-        const radioNone = document.querySelector('input[name="imgType"][value="none"]');
-        const radioUpload = document.querySelector('input[name="imgType"][value="upload"]');
-        const fileInput = document.getElementById('imageUpload');
-        const preview = document.getElementById('previewImg');
         
-        // Toggle simple/variantes
         function toggleFields() {
             const isVariants = typeSelect.value === 'variants';
             simpleDiv.style.display = isVariants ? 'none' : 'block';
@@ -705,30 +827,6 @@
         }
         typeSelect.addEventListener('change', toggleFields);
         
-        // Gestion affichage upload
-        radioNone.addEventListener('change', () => {
-            uploadArea.style.display = 'none';
-            preview.style.display = 'none';
-        });
-        radioUpload.addEventListener('change', () => {
-            uploadArea.style.display = 'block';
-        });
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if(file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    preview.src = ev.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                alert("Seulement les fichiers PNG ou JPG sont acceptés.");
-                fileInput.value = '';
-            }
-        });
-        
-        // Gestion des variantes (dynamique)
         function renderVariants() {
             const container = document.getElementById('variantsContainer');
             if(!container) return;
@@ -744,33 +842,18 @@
                 `;
                 container.appendChild(div);
             });
-            // Ajout des événements de suppression
             document.querySelectorAll('#variantsContainer .btn-danger').forEach(btn => {
                 btn.removeEventListener('click', handleVariantDelete);
                 btn.addEventListener('click', handleVariantDelete);
             });
         }
-        
         function handleVariantDelete(e) {
             const idx = parseInt(e.currentTarget.dataset.idx);
             variantsArray.splice(idx, 1);
             renderVariants();
         }
+        function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
         
-        // Fonction utilitaire pour échapper le HTML (éviter les injections)
-        function escapeHtml(str) {
-            if(!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if(m === '&') return '&amp;';
-                if(m === '<') return '&lt;';
-                if(m === '>') return '&gt;';
-                return m;
-            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                return c;
-            });
-        }
-        
-        // Initialiser l'affichage des variantes si nécessaire
         const addVariantBtn = document.getElementById('addVariantBtn');
         if(addVariantBtn) {
             addVariantBtn.addEventListener('click', () => {
@@ -778,66 +861,57 @@
                 renderVariants();
             });
         }
-        if(product?.type === 'variants') {
-            renderVariants();
-        }
+        if(product?.type === 'variants') renderVariants();
         
         // Sauvegarde
         document.getElementById('saveProductBtn').addEventListener('click', () => {
             const name = document.getElementById('prodName').value.trim();
-            if(!name) {
-                alert("Le nom du produit est requis.");
-                return;
-            }
+            if(!name) return alert("Nom requis");
             const description = document.getElementById('prodDesc').value;
             const active = document.getElementById('activeCheck').checked;
             
-            // Récupération de l'image (si upload)
+            let icon = null;
             let image = null;
-            if(radioUpload.checked && fileInput.files.length > 0 && preview.src && preview.src.startsWith('data:')) {
-                image = preview.src; // base64
+            if(radioEmoji.checked) {
+                icon = document.getElementById('emojiPreview').textContent;
+                image = null;
+            } else if(radioUpload.checked && fileInput.files.length > 0 && previewImg.src && previewImg.src.startsWith('data:')) {
+                image = previewImg.src;
+                icon = null;
             } else if(radioUpload.checked && product?.image && !fileInput.files.length) {
-                // on garde l'ancienne image
                 image = product.image;
+                icon = null;
             } else {
-                image = null; // pas d'icône
+                icon = null;
+                image = null;
             }
             
             const type = typeSelect.value;
             if(type === 'simple') {
                 const price = parseFloat(document.getElementById('simplePrice').value);
                 const stock = parseInt(document.getElementById('simpleStock').value);
-                if(isNaN(price)) {
-                    alert("Prix invalide");
-                    return;
-                }
+                if(isNaN(price)) return alert("Prix invalide");
                 const newProduct = {
                     id: isEdit ? product.id : Date.now().toString(),
                     name, description, type: "simple",
-                    price, stock, image, active
+                    price, stock, image, icon, active
                 };
                 if(isEdit) {
                     const idx = products.findIndex(p => p.id === product.id);
                     if(idx !== -1) products[idx] = newProduct;
-                } else {
-                    products.push(newProduct);
-                }
-            } else { // variantes
+                } else products.push(newProduct);
+            } else {
                 const basePrice = parseFloat(document.getElementById('basePrice').value);
-                if(isNaN(basePrice)) {
-                    alert("Prix de base requis");
-                    return;
-                }
-                // Récupérer les variantes depuis le DOM
+                if(isNaN(basePrice)) return alert("Prix de base requis");
                 const finalVariants = [];
                 const rows = document.querySelectorAll('#variantsContainer .variant-row');
-                for(let i = 0; i < rows.length; i++) {
+                for(let i=0; i<rows.length; i++) {
                     const row = rows[i];
                     const attrsInput = row.querySelector(`input[data-field="attrs${i}"]`);
                     const stockInput = row.querySelector(`input[data-field="stock${i}"]`);
                     const priceInput = row.querySelector(`input[data-field="price${i}"]`);
                     const attributes = attrsInput ? attrsInput.value.trim() : '';
-                    if(attributes === "") continue; // ignorer les lignes vides
+                    if(!attributes) continue;
                     const stock = parseInt(stockInput ? stockInput.value : 0) || 0;
                     const priceVar = parseFloat(priceInput ? priceInput.value : 0) || basePrice;
                     finalVariants.push({
@@ -847,23 +921,18 @@
                         price: priceVar
                     });
                 }
-                if(finalVariants.length === 0) {
-                    alert("Ajoutez au moins une variante (ex: S / Rouge)");
-                    return;
-                }
+                if(finalVariants.length === 0) return alert("Ajoutez au moins une variante");
                 const newProduct = {
                     id: isEdit ? product.id : Date.now().toString(),
                     name, description, type: "variants",
                     basePrice: basePrice,
                     variants: finalVariants,
-                    image, active
+                    image, icon, active
                 };
                 if(isEdit) {
                     const idx = products.findIndex(p => p.id === product.id);
                     if(idx !== -1) products[idx] = newProduct;
-                } else {
-                    products.push(newProduct);
-                }
+                } else products.push(newProduct);
             }
             saveProducts();
             modal.remove();
@@ -874,7 +943,7 @@
         modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
     }
     
-    // Gestion des événements globaux
+    // Événements globaux
     function attachGlobalEvents() {
         document.querySelectorAll('.status-admin').forEach(sel => {
             sel.removeEventListener('change', handleAdminChange);
