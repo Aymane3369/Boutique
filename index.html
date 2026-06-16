@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StyleShop - Administration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .logo h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+        .logo span {
+            font-weight: 400;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .nav-item {
+            padding: 0.7rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 500;
+        }
+        .nav-item:hover {
+            background: #1e293b;
+        }
+        .nav-item.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        /* MAIN */
+        .main {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-outline {
+            background: white;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+        }
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+        .btn-danger {
+            background: #ef4444;
+        }
+        .btn-small {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        /* Cards dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.2rem;
+            border-radius: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .stat-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #475569;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+
+        /* Tableaux */
+        .table-container {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .badge {
+            background: #e2e8f0;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .badge-success {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .badge-warning {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        select.status-admin {
+            padding: 0.3rem 0.5rem;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            font-size: 0.8rem;
+        }
+
+        /* Modals & forms */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 28px;
+            max-width: 600px;
+            width: 90%;
+            padding: 1.8rem;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+        }
+        .image-preview {
+            margin-top: 10px;
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+        .variant-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+        hr {
+            margin: 1rem 0;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .product-img-list {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #f1f5f9;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">
+        <h2>StyleShop</h2>
+        <span>Admin panel</span>
+    </div>
+    <div class="nav">
+        <div class="nav-item active" data-page="dashboard">📊 Dashboard</div>
+        <div class="nav-item" data-page="products">👕 Produits</div>
+        <div class="nav-item" data-page="stock">📦 Stock</div>
+        <div class="nav-item" data-page="orders">📋 Commandes</div>
+    </div>
+    <div style="margin-top: auto; font-size: 0.7rem; color:#94a3b8;">Accès admin via Supabase Auth (demo)</div>
+</div>
+
+<div class="main" id="mainContent">
+    <!-- contenu dynamique -->
+</div>
+
+<script>
+    // ---------- Données initiales ----------
+    let products = [
+        { id: "p1", name: "T-shirt Classic", description: "Coupe confortable", type: "simple", price: 19.9, stock: 12, image: null, active: true },
+        { id: "p2", name: "Sneakers Urban", description: "Tige basse", type: "variants", basePrice: 59.9, variants: [
+            { id: "v1", attributes: "38 / Blanc", stock: 5, price: 59.9 },
+            { id: "v2", attributes: "39 / Blanc", stock: 3, price: 59.9 },
+            { id: "v3", attributes: "40 / Blanc", stock: 0, price: 59.9 },
+            { id: "v4", attributes: "38 / Noir", stock: 8, price: 59.9 },
+            { id: "v5", attributes: "39 / Noir", stock: 2, price: 59.9 },
+            { id: "v6", attributes: "40 / Noir", stock: 4, price: 59.9 }
+        ], image: null },
+        { id: "p3", name: "Hoodie Premium", description: "Molleton épais", type: "variants", basePrice: 79.9, variants: [
+            { id: "v7", attributes: "S / Gris", stock: 6, price: 79.9 },
+            { id: "v8", attributes: "M / Gris", stock: 10, price: 79.9 },
+            { id: "v9", attributes: "L / Gris", stock: 3, price: 79.9 }
+        ], image: null },
+        { id: "p4", name: "Casquette Logo", description: "Coton bio", type: "simple", price: 24.9, stock: 2, image: null, active: true },
+        { id: "p5", name: "Chaussettes Pack", description: "Lot x3", type: "simple", price: 12.9, stock: 0, image: null, active: true }
+    ];
+
+    let orders = [
+        { id: "ORD-RYCTHN", client: "marc@mail.com", items: [{ productId: "p1", qty: 1, price: 19.9 }], total: 19.9, status: "Payée", adminFollowup: "À traiter" },
+        { id: "ORD-WCP62J", client: "leo@mail.com", items: [{ productId: "p2", variantId: "v1", qty: 1, price: 59.9 }], total: 39.8, status: "Payée", adminFollowup: "En cours" },
+        { id: "ORD-G7H81J", client: "claire@mail.com", items: [{ productId: "p3", variantId: "v7", qty: 1, price: 59.9 }], total: 59.9, status: "En attente", adminFollowup: "À traiter" },
+        { id: "ORD-D4E5F6", client: "bob@mail.com", items: [{ productId: "p4", qty: 1, price: 24.9 }], total: 89.9, status: "Payée", adminFollowup: "Expédié" },
+        { id: "ORD-A1B2C3", client: "alice@mail.com", items: [{ productId: "p1", qty: 2, price: 19.9 }], total: 69.7, status: "Payée", adminFollowup: "Terminé" }
+    ];
+
+    // Load from localStorage
+    function loadData() {
+        const storedProducts = localStorage.getItem("styleshop_products");
+        if(storedProducts) products = JSON.parse(storedProducts);
+        const storedOrders = localStorage.getItem("styleshop_orders");
+        if(storedOrders) orders = JSON.parse(storedOrders);
+    }
+    function saveProducts() { localStorage.setItem("styleshop_products", JSON.stringify(products)); }
+    function saveOrders() { localStorage.setItem("styleshop_orders", JSON.stringify(orders)); }
+
+    loadData();
+
+    // Helper: Calculs dashboard
+    function getStats() {
+        let totalProducts = products.length;
+        let activeProducts = products.filter(p => p.active !== false).length;
+        let totalStock = 0;
+        products.forEach(p => {
+            if(p.type === "simple") totalStock += (p.stock || 0);
+            else if(p.variants) totalStock += p.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+        });
+        let paidOrders = orders.filter(o => o.status === "Payée");
+        let revenue = paidOrders.reduce((sum, o) => sum + o.total, 0);
+        let lowStockItems = 0;
+        products.forEach(p => {
+            if(p.type === "simple" && p.stock <= 2 && p.stock > 0) lowStockItems++;
+            else if(p.variants) p.variants.forEach(v => { if(v.stock <= 2 && v.stock > 0) lowStockItems++; });
+        });
+        return { totalProducts, activeProducts, totalStock, revenue, ordersCount: orders.length, lowStockItems };
+    }
+
+    // Rendu Dashboard
+    function renderDashboard() {
+        const stats = getStats();
+        return `
+            <div class="page-header"><h1>Dashboard</h1></div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-title">Produits actifs</div><div class="stat-value">${stats.activeProducts} / ${stats.totalProducts}</div></div>
+                <div class="stat-card"><div class="stat-title">Commandes</div><div class="stat-value">${stats.ordersCount}</div></div>
+                <div class="stat-card"><div class="stat-title">Chiffre d'affaires (payées)</div><div class="stat-value">${stats.revenue.toFixed(2)} €</div></div>
+                <div class="stat-card"><div class="stat-title">Stock total</div><div class="stat-value">${stats.totalStock} unités</div></div>
+                <div class="stat-card"><div class="stat-title">Alertes stock bas</div><div class="stat-value">${stats.lowStockItems}</div></div>
+            </div>
+            <div class="table-container"><table><thead><tr><th>Dernières commandes</th><th>Client</th><th>Total</th><th>Statut</th><th>Suivi admin</th></tr></thead><tbody>
+                ${orders.slice(0,5).map(o => `<tr><td>${o.id}</td><td>${o.client}</td><td>${o.total} €</td><td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
+                <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td></tr>`).join('')}
+            </tbody></table></div>
+        `;
+    }
+
+    // Rendu produits (liste + modal ajout/modif)
+    let currentEditProduct = null;
+
+    function renderProducts() {
+        return `
+            <div class="page-header"><h1>Produits</h1><button class="btn" id="addProductBtn">+ Ajouter produit</button></div>
+            <div class="table-container"><table><thead><tr><th>Image</th><th>Nom</th><th>Type</th><th>Prix</th><th>Stock</th><th>Actif</th><th>Actions</th></tr></thead><tbody>
+                ${products.map(p => {
+                    let priceDisplay = p.type === "simple" ? `${p.price} €` : `à partir de ${p.basePrice} €`;
+                    let stockDisplay = p.type === "simple" ? p.stock : (p.variants?.reduce((s,v)=>s+v.stock,0) || 0);
+                    let imgHtml = p.image ? `<img class="product-img-list" src="${p.image}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">` : (p.iconText || "📦");
+                    if(!p.image && !p.iconText) imgHtml = "🖼️";
+                    return `<tr>
+                        <td>${imgHtml}</td><td>${p.name}</td><td>${p.type === "simple" ? "Simple" : "Variantes"}</td><td>${priceDisplay}</td><td>${stockDisplay}</td>
+                        <td>${p.active !== false ? "✅" : "❌"}</td>
+                        <td><button class="btn-small btn-outline edit-product" data-id="${p.id}">Modifier</button> <button class="btn-small btn-danger delete-product" data-id="${p.id}">Supprimer</button></td>
+                    </tr>`;
+                }).join('')}
+            </tbody></table></div>
+        `;
+    }
+
+    // Modal ajout / modification produit
+    function showProductModal(product=null) {
+        const isEdit = !!product;
+        let formHtml = `
+            <div class="modal" id="productModal">
+                <div class="modal-content">
+                    <h2>${isEdit ? "Modifier" : "Ajouter"} un produit</h2>
+                    <div class="form-group"><label>Nom</label><input id="prodName" value="${product?.name || ''}" placeholder="Ex: T-shirt Classic"></div>
+                    <div class="form-group"><label>Description</label><textarea id="prodDesc">${product?.description || ''}</textarea></div>
+                    <div class="form-group"><label>Type</label><select id="prodType"><option value="simple" ${product?.type === 'simple' ? 'selected' : ''}>Produit simple</option><option value="variants" ${product?.type === 'variants' ? 'selected' : ''}>Avec variantes</option></select></div>
+                    <div id="simpleFields" style="${product?.type === 'variants' ? 'display:none' : ''}">
+                        <div class="form-group"><label>Prix (€)</label><input id="simplePrice" type="number" step="0.01" value="${product?.price || ''}"></div>
+                        <div class="form-group"><label>Stock</label><input id="simpleStock" type="number" value="${product?.stock || 0}"></div>
+                    </div>
+                    <div id="variantsFields" style="${product?.type === 'variants' ? '' : 'display:none'}">
+                        <div class="form-group"><label>Prix de base (€)</label><input id="basePrice" type="number" step="0.01" value="${product?.basePrice || ''}"></div>
+                        <div class="form-group"><label>Variantes</label><div id="variantsContainer"></div><button type="button" class="btn-small" id="addVariantBtn">+ Ajouter variante</button></div>
+                    </div>
+                    <div class="form-group"><label>Image / Icône</label>
+                        <div><label><input type="radio" name="imgType" value="none" ${!product?.image ? 'checked' : ''}> Pas d'icône</label> &nbsp;
+                        <label><input type="radio" name="imgType" value="upload" ${product?.image ? 'checked' : ''}> Télécharger image (PNG/JPG)</label></div>
+                        <div id="uploadArea" style="display:${product?.image ? 'block' : 'none'}"><input type="file" id="imageUpload" accept="image/png,image/jpeg,image/jpg"><br><img id="previewImg" src="${product?.image || ''}" style="max-width:100px;margin-top:8px;display:${product?.image ? 'block' : 'none'}"></div>
+                    </div>
+                    <div class="form-group"><label><input type="checkbox" id="activeCheck" ${product?.active !== false ? 'checked' : ''}> Produit actif</label></div>
+                    <div class="flex-between"><button class="btn-outline" id="closeModalBtn">Annuler</button><button class="btn" id="saveProductBtn">Enregistrer</button></div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', formHtml);
+        const modal = document.getElementById('productModal');
+        const typeSelect = document.getElementById('prodType');
+        const simpleDiv = document.getElementById('simpleFields');
+        const variantsDiv = document.getElementById('variantsFields');
+        const uploadArea = document.getElementById('uploadArea');
+        const radioNone = document.querySelector('input[name="imgType"][value="none"]');
+        const radioUpload = document.querySelector('input[name="imgType"][value="upload"]');
+        const fileInput = document.getElementById('imageUpload');
+        const preview = document.getElementById('previewImg');
+
+        function toggleVariantSimple() {
+            const isVariants = typeSelect.value === 'variants';
+            simpleDiv.style.display = isVariants ? 'none' : 'block';
+            variantsDiv.style.display = isVariants ? 'block' : 'none';
+        }
+        typeSelect.addEventListener('change', toggleVariantSimple);
+        
+        // Gestion upload image
+        radioNone.addEventListener('change', () => { uploadArea.style.display = 'none'; preview.style.display='none'; });
+        radioUpload.addEventListener('change', () => { uploadArea.style.display = 'block'; });
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => { preview.src = ev.target.result; preview.style.display = 'block'; };
+                reader.readAsDataURL(file);
+            } else alert("Seulement PNG ou JPG");
+        });
+
+        // Gestion variantes dynamiques
+        let variantsArray = product?.variants ? [...product.variants] : [];
+        function renderVariants() {
+            const container = document.getElementById('variantsContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            variantsArray.forEach((v, idx) => {
+                const div = document.createElement('div');
+                div.className = 'variant-row';
+                div.innerHTML = `
+                    <input type="text" placeholder="Taille/Couleur" value="${v.attributes || ''}" data-field="attrs${idx}">
+                    <input type="number" placeholder="Stock" value="${v.stock || 0}" style="width:80px" data-field="stock${idx}">
+                    <input type="number" placeholder="Prix €" step="0.01" value="${v.price || ''}" style="width:100px" data-field="price${idx}">
+                    <button class="btn-small btn-danger" data-idx="${idx}">✖</button>
+                `;
+                container.appendChild(div);
+            });
+            document.querySelectorAll('[data-idx]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(btn.dataset.idx);
+                    variantsArray.splice(idx,1);
+                    renderVariants();
+                });
+            });
+        }
+        if(document.getElementById('addVariantBtn')) {
+            document.getElementById('addVariantBtn').addEventListener('click', () => {
+                variantsArray.push({ attributes: "", stock: 0, price: 0 });
+                renderVariants();
+            });
+        }
+        if(product?.type === 'variants') renderVariants();
+
+        document.getElementById('saveProductBtn').addEventListener('click', () => {
+            const name = document.getElementById('prodName').value.trim();
+            if(!name) return alert("Nom requis");
+            const description = document.getElementById('prodDesc').value;
+            const active = document.getElementById('activeCheck').checked;
+            let image = null;
+            if(radioUpload.checked && fileInput.files[0]) image = preview.src; // base64
+            else image = null; // pas d'icône
+
+            if(typeSelect.value === 'simple') {
+                const price = parseFloat(document.getElementById('simplePrice').value);
+                const stock = parseInt(document.getElementById('simpleStock').value);
+                if(isNaN(price)) return alert("Prix invalide");
+                const newProduct = { id: isEdit ? product.id : Date.now().toString(), name, description, type: "simple", price, stock, image, active };
+                if(isEdit) {
+                    const idx = products.findIndex(p => p.id === product.id);
+                    if(idx !== -1) products[idx] = newProduct;
+                } else products.push(newProduct);
+            } else {
+                const basePrice = parseFloat(document.getElementById('basePrice').value);
+                if(isNaN(basePrice)) return alert("Prix de base requis");
+                // collect variants
+                const finalVariants = [];
+                document.querySelectorAll('#variantsContainer .variant-row').forEach((row, idx) => {
+                    const attrs = row.querySelector(`[data-field="attrs${idx}"]`)?.value || '';
+                    const stock = parseInt(row.querySelector(`[data-field="stock${idx}"]`)?.value) || 0;
+                    const priceVar = parseFloat(row.querySelector(`[data-field="price${idx}"]`)?.value) || 0;
+                    if(attrs) finalVariants.push({ id: Date.now()+idx+Math.random(), attributes: attrs, stock: stock, price: priceVar || basePrice });
+                });
+                const newProduct = { id: isEdit ? product.id : Date.now().toString(), name, description, type: "variants", basePrice, variants: finalVariants, image, active };
+                if(isEdit) {
+                    const idx = products.findIndex(p => p.id === product.id);
+                    if(idx !== -1) products[idx] = newProduct;
+                } else products.push(newProduct);
+            }
+            saveProducts();
+            modal.remove();
+            renderCurrentPage();
+        });
+
+        document.getElementById('closeModalBtn').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
+    }
+
+    // Rendu Stock (tableau avec ajustement)
+    function renderStock() {
+        let rows = [];
+        products.forEach(p => {
+            if(p.type === "simple") {
+                rows.push({ name: p.name, variant: "Simple", stock: p.stock, productId: p.id, variantId: null, isVariant: false });
+            } else if(p.variants) {
+                p.variants.forEach(v => {
+                    rows.push({ name: p.name, variant: v.attributes, stock: v.stock, productId: p.id, variantId: v.id, isVariant: true });
+                });
+            }
+        });
+        return `
+            <div class="page-header"><h1>Gestion du stock</h1></div>
+            <div class="table-container"><table><thead><tr><th>Produit</th><th>Variante</th><th>Stock actuel</th><th>Ajuster</th></tr></thead><tbody>
+                ${rows.map(r => `
+                    <tr>
+                        <td>${r.name}</td><td>${r.variant}</td>
+                        <td>${r.stock === 0 ? "Rupture" : r.stock <= 2 ? `Bas (${r.stock})` : r.stock}</td>
+                        <td><button class="btn-small stock-down" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">-</button> 
+                        <span style="margin:0 8px">${r.stock}</span> 
+                        <button class="btn-small stock-up" data-pid="${r.productId}" data-vid="${r.variantId || ''}" data-isvar="${r.isVariant}">+</button></td>
+                    </tr>
+                `).join('')}
+            </tbody></table></div>
+        `;
+    }
+
+    // Gestion modifications stock
+    function updateStock(productId, variantId, delta, isVariant) {
+        const product = products.find(p => p.id === productId);
+        if(!product) return;
+        if(!isVariant && product.type === "simple") {
+            let newStock = (product.stock || 0) + delta;
+            if(newStock < 0) newStock = 0;
+            product.stock = newStock;
+        } else if(isVariant && product.variants) {
+            const variant = product.variants.find(v => v.id === variantId);
+            if(variant) {
+                let newStock = variant.stock + delta;
+                if(newStock < 0) newStock = 0;
+                variant.stock = newStock;
+            }
+        }
+        saveProducts();
+        renderCurrentPage();
+    }
+
+    // Rendu commandes avec suivi admin
+    function renderOrders() {
+        return `
+            <div class="page-header"><h1>Commandes (${orders.length})</h1><button class="btn" id="simulateOrderBtn">+ Simuler commande</button></div>
+            <div class="table-container"><table><thead><tr><th>N° commande</th><th>Client</th><th>Articles</th><th>Total</th><th>Statut</th><th>Suivi admin</th><th>Actions</th></tr></thead><tbody>
+                ${orders.map(o => `<tr>
+                    <td>${o.id}</td><td>${o.client}</td><td>${o.items?.length || 1} article(s)</td><td>${o.total} €</td>
+                    <td><span class="badge ${o.status === 'Payée' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
+                    <td><select class="status-admin" data-order-id="${o.id}">${['À traiter','En cours','Expédié','Terminé'].map(s => `<option ${o.adminFollowup === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
+                    <td><button class="btn-small btn-danger delete-order" data-id="${o.id}">Supprimer</button></td>
+                </tr>`).join('')}
+            </tbody></table></div>
+        `;
+    }
+
+    function attachGlobalEvents() {
+        // Suivi admin change
+        document.querySelectorAll('.status-admin').forEach(sel => {
+            sel.removeEventListener('change', handleAdminChange);
+            sel.addEventListener('change', handleAdminChange);
+        });
+        // Stock buttons
+        document.querySelectorAll('.stock-up, .stock-down').forEach(btn => {
+            btn.removeEventListener('click', handleStockClick);
+            btn.addEventListener('click', handleStockClick);
+        });
+        // Delete product
+        document.querySelectorAll('.delete-product').forEach(btn => {
+            btn.removeEventListener('click', handleDeleteProduct);
+            btn.addEventListener('click', handleDeleteProduct);
+        });
+        // Edit product
+        document.querySelectorAll('.edit-product').forEach(btn => {
+            btn.removeEventListener('click', handleEditProduct);
+            btn.addEventListener('click', handleEditProduct);
+        });
+        // Delete order
+        document.querySelectorAll('.delete-order').forEach(btn => {
+            btn.removeEventListener('click', handleDeleteOrder);
+            btn.addEventListener('click', handleDeleteOrder);
+        });
+    }
+
+    function handleAdminChange(e) {
+        const orderId = e.target.dataset.orderId;
+        const newValue = e.target.value;
+        const order = orders.find(o => o.id === orderId);
+        if(order) { order.adminFollowup = newValue; saveOrders(); }
+    }
+    function handleStockClick(e) {
+        const btn = e.currentTarget;
+        const delta = btn.classList.contains('stock-up') ? 1 : -1;
+        const productId = btn.dataset.pid;
+        const variantId = btn.dataset.vid;
+        const isVariant = btn.dataset.isvar === 'true';
+        updateStock(productId, variantId, delta, isVariant);
+    }
+    function handleDeleteProduct(e) {
+        const id = e.currentTarget.dataset.id;
+        if(confirm("Supprimer ce produit ?")) {
+            products = products.filter(p => p.id !== id);
+            saveProducts();
+            renderCurrentPage();
+        }
+    }
+    function handleEditProduct(e) {
+        const id = e.currentTarget.dataset.id;
+        const product = products.find(p => p.id === id);
+        if(product) showProductModal(product);
+    }
+    function handleDeleteOrder(e) {
+        const id = e.currentTarget.dataset.id;
+        if(confirm("Supprimer cette commande ?")) {
+            orders = orders.filter(o => o.id !== id);
+            saveOrders();
+            renderCurrentPage();
+        }
+    }
+
+    function simulateOrder() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let newId = 'ORD-' + Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+        const randClient = `client${Math.floor(Math.random()*100)}@demo.com`;
+        const randTotal = (Math.random() * 100 + 10).toFixed(2);
+        const newOrder = {
+            id: newId,
+            client: randClient,
+            items: [{ productId: "p1", qty: 1, price: randTotal }],
+            total: parseFloat(randTotal),
+            status: Math.random() > 0.6 ? "Payée" : "En attente",
+            adminFollowup: "À traiter"
+        };
+        orders.unshift(newOrder);
+        saveOrders();
+        renderCurrentPage();
+    }
+
+    let currentPage = 'dashboard';
+    function renderCurrentPage() {
+        let html = '';
+        if(currentPage === 'dashboard') html = renderDashboard();
+        else if(currentPage === 'products') html = renderProducts();
+        else if(currentPage === 'stock') html = renderStock();
+        else if(currentPage === 'orders') html = renderOrders();
+        document.getElementById('mainContent').innerHTML = html;
+        if(currentPage === 'products') {
+            const addBtn = document.getElementById('addProductBtn');
+            if(addBtn) addBtn.addEventListener('click', () => showProductModal(null));
+        }
+        if(currentPage === 'orders') {
+            const simBtn = document.getElementById('simulateOrderBtn');
+            if(simBtn) simBtn.addEventListener('click', simulateOrder);
+        }
+        attachGlobalEvents();
+    }
+
+    function initNavigation() {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                currentPage = item.dataset.page;
+                renderCurrentPage();
+            });
+        });
+        renderCurrentPage();
+    }
+
+    initNavigation();
+</script>
+</body>
+</html>
